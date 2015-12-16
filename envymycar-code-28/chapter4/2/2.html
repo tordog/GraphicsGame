@@ -1,0 +1,72 @@
+<html>
+	<head>
+		<title>The Observer Camera</title>
+        <link rel="stylesheet" href="../../style.css">
+        <script type="text/javascript" src="../../lib/spidergl.js"></script>
+		<script type="text/javascript" src="../../lib/spidergl-config.js"></script>
+		<script type="text/javascript" src="../../lib/nvmc.js"></script>
+		<script type="text/javascript" src="../../lib/nvmc-config.js"></script>
+		<script type="text/javascript" src="../../chapter3/cube.js"></script>
+		<script type="text/javascript" src="../../chapter3/cone.js"></script>
+		<script type="text/javascript" src="../../chapter3/cylinder.js"></script>
+		<script type="text/javascript" src="../0/track.js"></script>
+		<script type="text/javascript" src="../0/quadrilateral.js"></script>
+		<script type="text/javascript" src="../0/building.js"></script>
+		<script type="text/javascript" src="../0/race.js"></script>
+		<script type="text/javascript" src="../0/0.js"></script>
+		<script type="text/javascript" src="../0/shaders.js"></script>
+		<script type="text/javascript" src="../1/1.js"></script>
+		<script type="text/javascript" src="2.js"></script>
+		<script type="text/javascript" src="../../lib/nvmc-glue.js"></script>
+	</head>
+	<body>
+        <ul class="combar">
+            <li>Instructions</li>
+            <li>[w]: move forward (mode 1 and 3)<br>
+                [s]: move backward (mode 1 and 3)<br>
+                [a]: steer left (mode 1) / pan left (mode 3)<br>
+                [d]: steer right (mode 1) / pan right (mode 3)<br>
+                [q]: move up (mode 2,3)<br>
+                [e]: move down (mode 2,3)<br>
+                [2]: ++mode<br>
+                [1]: --mode<br>
+                <br>
+                Modes:<br>
+                1: Chase View <br>
+                2: Photographer View<br>
+                3: The observer Camera <br>
+                <br>
+                [n]: Orbit around a fix point in front of the camera<br>
+                [m]: Look around <br>
+                [l]: lock view to the car (in photographer mode)<br>
+                [u]: unlock view to the car (in photographer mode)<br>
+        </ul>
+
+        <ul class="navbar">
+            <li>Section 4.12, page 136</li>
+            <li>  The observer camera allows you to go around without constraints.
+                With the wasd keys yo can move and with the mouse you can either look
+                around (like in a First Person Shooter game, or orbit around a fix point in space ) </li>
+        </ul>
+        <center>
+			<h2>The Observer Camera</h2>
+			<div>
+			  <hr/>
+			  <canvas id="nvmc-canvas" width="600" height="400" style="border:1px solid gray;"></canvas>
+			  <hr/>
+			</div><h3>Log</h3>
+
+
+
+
+			  <textarea id="nvmc-log" rows="4" cols="80"></textarea>
+			<div>
+			  <div id="nvmc-fps">FPS</div>
+			  <div id="nvmc-latency">Latency</div>
+			  <div id="nvmc-server-clock-delta">Server Clock Delta</div>
+			  <div id="nvmc-server-time">Server Time</div>
+			</div>
+			<hr/>
+		</center>
+	</body>
+</html>

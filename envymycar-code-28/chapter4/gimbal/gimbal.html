@@ -1,0 +1,81 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Drawings</title>
+
+<script type="text/javascript" src="../../lib/spidergl.js"></script>
+<script type="text/javascript" src="../../lib/spidergl-config.js"></script>
+<script type="text/javascript" src="../../lib/dataview.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/parsePLY.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/importPLY.js"></script>
+<script type="text/javascript" src="trackball.js"></script>
+<script type="text/javascript" src="primitives.js"></script>
+<script type="text/javascript" src="events_drawings.js"></script>
+<script type="text/javascript" src="init_drawings.js"></script>
+<script type="text/javascript" src="gimbal.js"></script>
+ <script type="text/javascript">
+ 
+// WebGL rendering context
+var gl = null;
+
+// Trackball
+var tb = null;
+
+function log(msg) {
+	var textarea = document.getElementById("log-area");
+	textarea.innerHTML += (msg + "\n");
+	textarea.scrollTop = textarea.scrollHeight;
+}
+
+function dispatch(obj, methodName) {
+	return function () { obj[methodName].apply(obj, arguments); };
+}
+
+function draw() {
+	drawScene(gl);
+}
+
+function start() {
+
+	var canvas = document.getElementById("canvas");
+
+	// Initialize the WebGL rendering context
+	gl = canvas.getContext("experimental-webgl");
+	SglContext.hijack(gl)
+
+	tb = new Trackball(canvas.clientWidth,canvas.clientHeight);
+
+	window.onmousedown = dispatch(tb, "onMouseDown");
+	window.onmouseup   = dispatch(tb, "onMouseUp"  );
+	window.onmousemove = dispatch(tb, "onMouseMove");
+
+	window.onkeyup   = onKeyUp;
+	window.onkeydown = onKeyDown;
+
+	// Only continue if WebGL is available and working
+	if (gl) {
+		init(gl);
+		initialize(gl);
+		setInterval(draw, 20);
+	}
+	else {
+		alert("WebGL initialization failed! Your browser does not support WebGL or it is not properly configured.");	
+	}
+
+	log(" a - increase yaw  \n\ s - increase pitch  \n\ d - increase pitch  \n\ ");
+}
+</script>
+
+</head>
+<body onload="start()"> 
+	<center>
+	<canvas id="canvas" width="600" height="600">
+		If you are seeing this message your web browser does not support the HTML5 &lt;canvas>&gt; element.
+	</canvas>
+	</center>
+	<center>
+	<textarea id="log-area" rows="10" cols="80"></textarea>
+	</center>
+	
+</body>
+</html>

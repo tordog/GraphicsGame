@@ -1,0 +1,218 @@
+<html>
+<head>
+<title>SpiderGL Simple Model</title>
+<script type="text/javascript" src="../../lib/spidergl.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/parsePLY.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/importPLY.js"></script>
+<script type="text/javascript" src="./shaders.js"></script>
+<script type="text/javascript">
+function log(msg) {
+	var textarea = document.getElementById("log-area");
+	textarea.innerHTML += (msg + "\n");
+	textarea.scrollTop = textarea.scrollHeight;
+}
+
+// global variables
+var Ka = 0.2;
+var Kd = 0.6;
+var Ks = 0.8;
+var shininess = 32.0;
+
+SpiderGL.openNamespace();
+
+function CanvasHandler() {
+}
+
+CanvasHandler.prototype = {
+	onInitialize : function () {
+	
+		var gl = this.ui.gl;
+
+		this.technique1 = new SglTechnique(gl, {
+			vertexShader : PerVertexPhong_vs,
+			fragmentShader : PerVertexPhong_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : [ 0.0, 1.8, 2.0 ] },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uKa"                        : { semantic : "AMBIENT_COEFFICIENT",          value : Ka },
+			    "uKd"                        : { semantic : "DIFFUSE_COEFFICIENT",          value : Kd },		
+			    "uKs"                        : { semantic : "SPECULAR_COEFFICIENT",         value : Ks },
+			    "uShininess"                 : { semantic : "SHININESS_EXPONENT",           value : shininess }
+			}
+		});
+		
+		this.technique2 = new SglTechnique(gl, {
+			vertexShader : PerPixelPhong_vs,
+			fragmentShader : PerPixelPhong_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : [ 0.0, 1.8, 2.0 ] },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uKa"                        : { semantic : "AMBIENT_COEFFICIENT",          value : Ka },
+			    "uKd"                        : { semantic : "DIFFUSE_COEFFICIENT",          value : Kd },		
+			    "uKs"                        : { semantic : "SPECULAR_COEFFICIENT",         value : Ks },
+			    "uShininess"                 : { semantic : "SHININESS_EXPONENT",           value : 32.0 }
+			}
+		});
+		
+		log(" '1'   : Phong reflection model - Gouraud shading");
+		log(" '2'   : Phong reflection model - Phong shading");
+		log("'Q/W'  : Decrease/Increase Ambient component (Ka)");
+		log("'A/S'  : Decrease/Increase Diffuse component (Kd)");
+		log("'Z/X'  : Decrease/Increase Specular component (Ks)");
+		log("'E/R'  : Decrease/Increase Shininess exponent");
+		
+		// shading mode to use
+		this.shadingMode = 0;
+
+		this.model = null;
+		var that = this;
+		sglRequestBinary("car.ply", {
+			onSuccess : function (req) {
+				var plyData = req.buffer;
+				var modelDescriptor = importPly(plyData);
+				that.model = new SglModel(that.ui.gl, modelDescriptor);
+				that.ui.postDrawEvent();
+			}
+		});
+
+		this.renderer = new SglModelRenderer(gl);
+		this.xform    = new SglTransformationStack();
+		this.angle    = 0.0;
+
+		this.ui.animateRate = 50;
+
+		var that = this;
+		setInterval(function() {
+			document.getElementById("fps-div").innerHTML = "FPS: " + that.ui.framesPerSecond;
+		}, 1000);
+	},
+
+	onAnimate : function (dt) {
+		this.angle += 30.0 * dt;
+		this.ui.postDrawEvent();
+	},
+
+	onKeyDown : function (keyCode, event) {
+	
+		switch (keyCode) {
+			case "1": this.shadingMode = 0;  break; 
+			case "2": this.shadingMode = 1;  break; 
+			case "Q": Ka = Ka - 0.1; break;
+			case "W": Ka = Ka + 0.1; break;
+			case "A": Kd = Kd - 0.1; break;
+			case "S": Kd = Kd + 0.1; break;
+			case "Z": Ks = Ks - 0.1; break;
+			case "X": Ks = Ks + 0.1; break;
+			case "E": shininess = shininess - 1.0; break;
+			case "R": shininess = shininess + 1.0; break;
+		}
+		
+		if (Ka < 0.0) Ka = 0.0;
+		if (Kd < 0.0) Kd = 0.0;
+		if (Ks < 0.0) Ks = 0.0;
+		if (shininess < 1.0) shininess = 1.0;
+		
+		document.getElementById("parameters-div").innerHTML = "Parameters: Ka = " + Ka.toFixed(1) + " ; Kd " + Kd.toFixed(1) + " ; Ks " + Ks.toFixed(1) + " shininess = " + shininess;
+		
+		that.ui.postDrawEvent();
+	},
+	
+	onDraw : function () {
+		var gl       = this.ui.gl;
+		var width    = this.ui.width;
+		var height   = this.ui.height;
+		var xform    = this.xform;
+		var renderer = this.renderer;
+
+		gl.clearColor(0.4, 0.4, 0.4, 1.0);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+		gl.viewport(0, 0, width, height);
+
+		xform.projection.loadIdentity();
+		xform.projection.perspective(sglDegToRad(60.0), width/height, 0.1, 10.0);
+
+		xform.view.loadIdentity();
+		xform.view.lookAt([0.0, 2.0, 8.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+
+		xform.model.loadIdentity();
+		xform.model.rotate(sglDegToRad(this.angle), [0.0, 1.0, 0.0]);
+
+		var globals = {
+			"WORLD_VIEW_PROJECTION_MATRIX" : xform.modelViewProjectionMatrix,
+			"MODELVIEW_MATRIX"             : xform.modelViewMatrix,
+			"VIEW_SPACE_NORMAL_MATRIX"     : xform.viewSpaceNormalMatrix,
+			"AMBIENT_COEFFICIENT"          : Ka,
+			"DIFFUSE_COEFFICIENT"          : Kd,
+			"SPECULAR_COEFFICIENT"         : Ks,
+			"SHININESS_EXPONENT"           : shininess
+		};
+
+		gl.enable(gl.DEPTH_TEST);
+
+		if (this.model)
+		{
+			renderer.begin();
+			
+			if (this.shadingMode == 0)
+				renderer.setTechnique(this.technique1);
+			else if (this.shadingMode == 1)
+				renderer.setTechnique(this.technique2);
+				
+			renderer.setDefaultGlobals();
+
+			renderer.setPrimitiveMode("FILL");
+
+			renderer.setGlobals(globals);
+			renderer.setModel(this.model);
+
+			var parts = this.model.descriptor.logic.parts;
+			for (var partName in parts) {
+				var part = parts[partName];
+				renderer.setPart(partName);
+				for (var c in part.chunks) {
+					var chunkName = part.chunks[c];
+					renderer.setChunk(chunkName);
+					renderer.render();
+				}
+			}
+				
+			renderer.end();
+		}
+
+		gl.disable(gl.DEPTH_TEST);
+	}
+};
+
+sglHandleCanvasOnLoad("draw-canvas", new CanvasHandler());
+</script>
+</head>
+<body style="background-color:#aaa;">
+	<center>
+		<h2><font color="#444444">Phong Illumination Model</font></h2>
+		<br/>
+		<canvas id="draw-canvas" width="512" height="512" style="border:2px solid black;"></canvas>
+		<br/>
+		<div id="fps-div">FPS : 0</div>
+		<br/>
+		<div id="parameters-div">Parameters: Ka = 0.2 ; Kd = 0.6 ; Ks = 0.8 ; shininess = 32.0</div>
+		<br/>
+		<textarea id="log-area" rows="10" cols="80"></textarea>
+		<br/>
+	</center>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<title>Transformations in Action</title>
+ 
+<script type="text/javascript" src="../../lib/spidergl.js"></script>
+<script type="text/javascript" src="../../lib/spidergl-config.js"></script>
+<script type="text/javascript" src="../../lib/dataview.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/parsePLY.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/importPLY.js"></script>
+<script type="text/javascript" src="../../lib/nvmc.js"></script>
+<script type="text/javascript" src="./nvmc-circuit.js"></script>
+<script type="text/javascript" src="./nvmc_definition.js"></script>
+<script type="text/javascript" src="./nvmc_events.js"></script>
+<script type="text/javascript" src="./nvmc_draw.js"></script>
+<script type="text/javascript" src="../../lib/nvmc-glue.js"></script>
+<script type="text/javascript" src="./shaders.js"></script>;<
+<script type="text/javascript" src="./primitives.js"></script>
+<script type="text/javascript" src="./init_client.js"></script>
+<script type="text/javascript" src="./client_phong.js"></script>
+<!-- 
+ <script type="text/javascript">
+ 
+// OpenGL rendering context
+var gl = null;
+
+// primitive to render
+
+
+function draw() {
+	drawScene(gl);
+}
+
+function start() {
+
+	var canvas = document.getElementById("canvas");
+
+	// Initialize the OpenGL rendering context
+	gl = canvas.getContext("experimental-webgl");
+	   
+	// Only continue if WebGL is available and working
+	if (gl)  {
+		initialize(gl);
+		init(gl);
+		setInterval(draw, 20);	
+	}
+	else {
+		alert("WebGL initialization failed! Your browser does not support WebGL or it is not properly configured.");	
+	}		
+}
+</script> -->
+
+</head>
+<body> 
+<body>
+<center>
+<h2>Transformations in Action</h2>
+<div>
+  <hr/>
+  <canvas id="nvmc-canvas" width="900" height="600" style="border:1px solid gray;"></canvas>
+  <hr/>
+</div>
+<div>
+  <h3>Log</h3>
+  <textarea id="nvmc-log" rows="4" cols="80"></textarea>
+</div>
+<div>
+  <div id="nvmc-fps">FPS</div>
+  <div id="nvmc-latency">Latency</div>
+  <div id="nvmc-server-clock-delta">Server Clock Delta</div>
+  <div id="nvmc-server-time">Server Time</div>
+</div>
+<hr/>
+</center>
+</body>
+
+</body>
+</html>

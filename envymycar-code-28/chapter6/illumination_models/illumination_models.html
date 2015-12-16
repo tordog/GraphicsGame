@@ -1,0 +1,302 @@
+<html>
+<head>
+<title>SpiderGL Simple Model</title>
+<script type="text/javascript" src="../../lib/spidergl.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/parsePLY.js"></script>
+<script type="text/javascript" src="../../lib/load_ply/importPLY.js"></script>
+<script type="text/javascript" src="./shaders.js"></script>
+<script type="text/javascript">
+function log(msg) {
+	var textarea = document.getElementById("log-area");
+	textarea.innerHTML += (msg + "\n");
+	textarea.scrollTop = textarea.scrollHeight;
+}
+
+// globals
+var lightpos = [0.0, 5.0, -4.0];
+var gaussiancoeff = 32.0;
+var reflectioncoeff = 0.5;
+var roughness = 0.2;
+var Kcoeff = 1.2;
+
+SpiderGL.openNamespace();
+
+function CanvasHandler() {
+}
+
+CanvasHandler.prototype = {
+	onInitialize : function () {
+		var gl = this.ui.gl;
+
+		this.technique1 = new SglTechnique(gl, {
+			vertexShader : PerPixelPhong_vs,
+			fragmentShader : PerPixelPhong_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : lightpos },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uKa"                        : { semantic : "AMBIENT_COEFFICIENT",          value : 0.0 },
+			    "uKd"                        : { semantic : "DIFFUSE_COEFFICIENT",          value : 0.4 },
+			    "uKs"                        : { semantic : "SPECULAR_COEFFICIENT",         value : 0.8 },
+				"uShininess"                 : { semantic : "SHININESS_EXPONENT",           value : 32.0 },
+			}
+		});
+		
+		this.technique2 = new SglTechnique(gl, {
+			vertexShader : PerPixelCookTorrance_vs,
+			fragmentShader : PerPixelCookTorrance_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : lightpos },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uC"                         : { semantic : "GAUSSIAN_COEFFICIENT",         value : gaussiancoeff },
+			    "uR0"                        : { semantic : "REFLECTION_COEFFICIENT",       value : reflectioncoeff }
+			}
+		});
+		
+		this.technique3 = new SglTechnique(gl, {
+			vertexShader : PerPixelOrenNayar_vs,
+			fragmentShader : PerPixelOrenNayar_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : lightpos },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uRoughnessSq"               : { semantic : "ROUGHNESS_SQUARED",            value : roughness }
+			}
+		});
+
+		
+		this.technique4 = new SglTechnique(gl, {
+			vertexShader : PerPixelMinnaert_vs,
+			fragmentShader : PerPixelMinnaert_fs,
+			vertexStreams : {
+			    "aPosition" : [0.0, 0.0, 0.0, 0.0],
+				"aNormal" : [ 0.0, 0.0, 1.0, 0.0 ]
+			},
+			globals : {
+				"uModelViewProjectionMatrix" : { semantic : "WORLD_VIEW_PROJECTION_MATRIX", value : SglMat4.identity() },
+				"uModelViewMatrix"           : { semantic : "MODELVIEW_MATRIX",             value : SglMat4.identity() },
+				"uViewSpaceNormalMatrix"     : { semantic : "VIEW_SPACE_NORMAL_MATRIX",     value : SglMat3.identity() },
+				"uLightPosition"             : { semantic : "LIGHT0_LIGHT_POSITION",        value : lightpos },
+				"uLightColor"                : { semantic : "LIGHT0_LIGHT_COLOR",           value : [ 0.9, 0.9, 0.9 ] },
+				"uK"                         : { semantic : "SURFACE_COEFFICIENT",          value : Kcoeff }
+			}
+		});
+		
+		log("'1'  : Phong reflection model.");
+		log("'2'  : Cook-Torrance reflection model.");
+		log("'3'  : Oren-Nayar reflection model.");
+		log("'4'  : Minnaert reflection model.");
+		log("----------------------------------------------------------------------------------");
+		log("'Q'/'W'  : Decrease/Increase the Gaussian coefficient C (Cook-Torrance).");
+		log("'A'/'S'  : Decrease/Increase the reflection coefficient R0 (Cook-Torrance).");
+		log("'E'/'R'  : Decrease/Increase the roughness coefficient sigma (Oren-Nayar).");
+		log("'D'/'F'  : Decrease/Increase the Surface coefficient K (Minnaert Model).");
+		
+		// reflection model used
+		this.reflectionModel = 1;
+
+		this.model = null;
+		var that = this;
+		sglRequestBinary("car.ply", {
+			onSuccess : function (req) {
+				var plyData = req.buffer;
+				var modelDescriptor = importPly(plyData);
+				that.model = new SglModel(that.ui.gl, modelDescriptor);
+				that.ui.postDrawEvent();
+			}
+		});
+
+		this.renderer = new SglModelRenderer(gl);
+		this.xform    = new SglTransformationStack();
+		this.angle    = 0.0;
+
+		this.ui.animateRate = 50;
+
+		var that = this;
+		setInterval(function() {
+			document.getElementById("fps-div").innerHTML = "FPS: " + that.ui.framesPerSecond;
+		}, 1000);
+	},
+
+	onAnimate : function (dt) {
+		this.angle += 30.0 * dt;
+		this.ui.postDrawEvent();
+	},
+	
+	onKeyDown : function (keyCode, event) {
+	
+		switch (keyCode) {
+			case "1": this.reflectionModel = 0; break; 
+			case "2": this.reflectionModel = 1; break; 
+			case "3": this.reflectionModel = 2; break;
+			case "4": this.reflectionModel = 3; break;
+			case "Q": gaussiancoeff -= 1.0; break;
+			case "W": gaussiancoeff += 1.0; break;
+			case "A": reflectioncoeff -= 0.1; break;
+			case "S": reflectioncoeff += 0.1; break;
+			case "E": roughness -= 0.1; break;
+			case "R": roughness += 0.1; break;
+			case "D": Kcoeff -= 0.1; break;
+			case "F": Kcoeff += 0.1; break;
+		}
+		
+		if (gaussiancoeff < 0.0) gaussiancoeff = 0.0;
+		if (gaussiancoeff > 255.0) gaussiancoeff = 255.0;
+		if (reflectioncoeff < 0.1) reflectioncoeff = 0.1;
+		if (reflectioncoeff > 1.0) reflectioncoeff = 1.0;
+		if (roughness < 0.1) roughness = 0.5;
+		if (roughness > 0.5) roughness = 0.5;
+		if (Kcoeff < 0.5) Kcoeff = 0.5;
+		if (Kcoeff > 2.5) Kcoeff = 2.5;
+		
+		this.ui.postDrawEvent();
+	},
+	
+	onDraw : function () {
+		var gl       = this.ui.gl;
+		var width    = this.ui.width;
+		var height   = this.ui.height;
+		var xform    = this.xform;
+		var renderer = this.renderer;
+
+		gl.clearColor(1.0, 0.0, 0.0, 1.0);
+		gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT);
+
+		gl.viewport(0, 0, width, height);
+
+		xform.projection.loadIdentity();
+		xform.projection.perspective(sglDegToRad(60.0), width/height, 0.1, 10.0);
+
+		xform.view.loadIdentity();
+		xform.view.lookAt([0.0, 2.0, 8.0], [0.0, 0.0, 0.0], [0.0, 1.0, 0.0]);
+
+		xform.model.loadIdentity();
+		xform.model.rotate(sglDegToRad(this.angle), [0.0, 1.0, 0.0]);
+
+		var globals1 = {
+			"WORLD_VIEW_PROJECTION_MATRIX" : xform.modelViewProjectionMatrix,
+			"MODELVIEW_MATRIX"             : xform.modelViewMatrix,
+			"VIEW_SPACE_NORMAL_MATRIX"     : xform.viewSpaceNormalMatrix
+		};
+		
+		var globals2 = {
+			"WORLD_VIEW_PROJECTION_MATRIX" : xform.modelViewProjectionMatrix,
+			"MODELVIEW_MATRIX"             : xform.modelViewMatrix,
+			"VIEW_SPACE_NORMAL_MATRIX"     : xform.viewSpaceNormalMatrix,
+			"GAUSSIAN_COEFFICIENT"         : gaussiancoeff,
+			"REFLECTION_COEFFICIENT"       : reflectioncoeff
+		};
+		
+		var globals3 = {
+			"WORLD_VIEW_PROJECTION_MATRIX" : xform.modelViewProjectionMatrix,
+			"MODELVIEW_MATRIX"             : xform.modelViewMatrix,
+			"VIEW_SPACE_NORMAL_MATRIX"     : xform.viewSpaceNormalMatrix,
+			"ROUGHNESS_SQUARED"            : roughness
+		};
+
+		var globals4 = {
+			"WORLD_VIEW_PROJECTION_MATRIX" : xform.modelViewProjectionMatrix,
+			"MODELVIEW_MATRIX"             : xform.modelViewMatrix,
+			"VIEW_SPACE_NORMAL_MATRIX"     : xform.viewSpaceNormalMatrix,
+			"SURFACE_COEFFICIENT"          : Kcoeff
+		};
+
+
+		gl.enable(gl.DEPTH_TEST);
+
+		if (this.model)
+		{
+			renderer.begin();
+			
+			if (this.reflectionModel == 0)
+			{
+				renderer.setTechnique(this.technique1);
+			}
+			else if (this.reflectionModel == 1)
+			{
+				renderer.setTechnique(this.technique2);
+			}
+			else if (this.reflectionModel == 2)
+			{
+				renderer.setTechnique(this.technique3);
+			}
+			else if (this.reflectionModel == 3)
+			{
+				renderer.setTechnique(this.technique4);
+			}
+			
+			renderer.setDefaultGlobals();
+			renderer.setPrimitiveMode("FILL");
+			
+			if (this.reflectionModel == 0)
+			{
+				renderer.setGlobals(globals1);
+			}
+			else if (this.reflectionModel == 1)
+			{
+				renderer.setGlobals(globals2);
+			}
+			else if (this.reflectionModel == 2)
+			{
+				renderer.setGlobals(globals3);
+			}
+			else if (this.reflectionModel == 3)
+			{
+				renderer.setGlobals(globals4);
+			}			
+			
+			renderer.setModel(this.model);
+
+			var parts = this.model.descriptor.logic.parts;
+			for (var partName in parts) {
+				var part = parts[partName];
+				renderer.setPart(partName);
+				for (var c in part.chunks) {
+					var chunkName = part.chunks[c];
+					renderer.setChunk(chunkName);
+					renderer.render();
+				}
+			}
+			
+			renderer.end();
+		}
+
+		gl.disable(gl.DEPTH_TEST);
+	}
+};
+
+sglHandleCanvasOnLoad("draw-canvas", new CanvasHandler());
+</script>
+</head>
+<body style="background-color:#aaa;">
+	<center>
+		<h2><font color="#444444">Illumination Models</font></h2>
+		<br/>
+		<canvas id="draw-canvas" width="512" height="512" style="border:2px solid black;"></canvas>
+		<br/>
+		<div id="fps-div">FPS : 0</div>
+		<br/>
+		<textarea id="log-area" rows="10" cols="80"></textarea>
+		<br/>
+	</center>
+</body>
+</html>
