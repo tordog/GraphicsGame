@@ -6,8 +6,9 @@ var TIMER = 0;
 //var BALLTRANSLATE=0;
 //var BALLGOING = false;
 var BALLSARRAY1 = [];
-var BALLSARRAY1 = [];
+var BALLSARRAY2 = [];
 var GAMEOVER = false;
+var POINTS = 0;
 // var BUTTONPRESS = false;
 /***********************************************************************/
 
@@ -163,34 +164,39 @@ NVMCClient.drawScene = function (gl) {
 	x=cannonPos[0];
 
 
-	for(var i = 0; i<BALLSARRAY.length; i++){
-		if(BALLSARRAY[i].translateZ >= 25){
+	for(var i = 0; i<BALLSARRAY1.length; i++){
+		if(BALLSARRAY1[i].translateZ >= 25){
+			POINTS+=10;
 			//remove BALLSARRAY[0] since that's what it should be.
-			BALLSARRAY.shift();
+			BALLSARRAY1.shift();
 			i--;
 		}
 		else{
 			
 			m = (z-z1)/(x-x1);
-			BALLSARRAY[i].translateZ += .1;
-			newZ = z + BALLSARRAY[i].translateZ;
+			BALLSARRAY1[i].translateZ += .1;
+			newZ = z + BALLSARRAY1[i].translateZ;
 			newX = x1 + ((newZ - z1)/m);
 			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
-			BALLSARRAY[i].translateX = newX - x;
+			BALLSARRAY1[i].translateX = newX - x;
 
 			//detect collisions
 			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
 			
 			if(distance <= 1) {
-				if((BALLSARRAY[i].colorStr == "red") && (this.getButtonPress() != "N")){
+				if((BALLSARRAY1[i].colorStr == "red") && (this.getButtonPress() != "N")){
 					console.log("HIT RED! You didn't press 'N' at the right time.");
-					BALLSARRAY = [];
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
 					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
 				}
-				else if((BALLSARRAY[i].colorStr == "blue") && (this.getButtonPress() != "M")){
+				else if((BALLSARRAY1[i].colorStr == "blue") && (this.getButtonPress() != "M")){
 					console.log("HIT BLUE! You didn't press 'M' at the right time.");
-					BALLSARRAY = [];
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
 					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
 				}
 				else{
 					//console.log(BALLSARRAY[i].translateX)
@@ -198,7 +204,7 @@ NVMCClient.drawScene = function (gl) {
 					stack.push();
 					var M_9 = this.myFrame();
 					stack.multiply(M_9);
-					this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ, BALLSARRAY[i].color);
+					this.generateBall(gl, BALLSARRAY1[i].translateX, BALLSARRAY1[i].translateZ, BALLSARRAY1[i].color, 0);
 					stack.pop();
 				}
 			}
@@ -208,13 +214,82 @@ NVMCClient.drawScene = function (gl) {
 				stack.push();
 				var M_9 = this.myFrame();
 				stack.multiply(M_9);
-				this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ, BALLSARRAY[i].color);
+				this.generateBall(gl, BALLSARRAY1[i].translateX, BALLSARRAY1[i].translateZ, BALLSARRAY1[i].color, 0);
+				stack.pop();
+			}
+		}
+	}
+
+	cannonPos = [pos[0]+10, pos[1], pos[2]-20];
+	//line from pos to cannonPos? to generate an x, y.
+	
+	//increment z by 1 each time.
+	// z+=1;
+	// x = x1 + ((z-z1) / m);
+
+	z1=pos[2];
+	z=cannonPos[2];
+	x1=pos[0];
+	x=cannonPos[0];
+
+	for(var i = 0; i<BALLSARRAY2.length; i++){
+		if(BALLSARRAY2[i].translateZ >= 25){
+			POINTS+=10;
+			//remove BALLSARRAY[0] since that's what it should be.
+			BALLSARRAY2.shift();
+			i--;
+		}
+		else{
+			
+			m = (z-z1)/(x-x1);
+			BALLSARRAY2[i].translateZ += .1;
+			newZ = z + BALLSARRAY2[i].translateZ;
+			newX = x1 + ((newZ - z1)/m);
+			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
+			BALLSARRAY2[i].translateX = newX - x;
+
+			//detect collisions
+			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
+			
+			if(distance <= 1) {
+				if((BALLSARRAY2[i].colorStr == "red") && (this.getButtonPress() != "N")){
+					console.log("HIT RED! You didn't press 'N' at the right time.");
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
+				}
+				else if((BALLSARRAY2[i].colorStr == "blue") && (this.getButtonPress() != "M")){
+					console.log("HIT BLUE! You didn't press 'M' at the right time.");
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
+				}
+				else{
+					//console.log(BALLSARRAY[i].translateX)
+					//BALLSARRAY[i].translateX = 0;
+					stack.push();
+					var M_9 = this.myFrame();
+					stack.multiply(M_9);
+					this.generateBall(gl, BALLSARRAY2[i].translateX, BALLSARRAY2[i].translateZ, BALLSARRAY2[i].color, 1);
+					stack.pop();
+				}
+			}
+			else{
+				//console.log(BALLSARRAY[i].translateX)
+				//BALLSARRAY[i].translateX = 0;
+				stack.push();
+				var M_9 = this.myFrame();
+				stack.multiply(M_9);
+				this.generateBall(gl, BALLSARRAY2[i].translateX, BALLSARRAY2[i].translateZ, BALLSARRAY2[i].color, 1);
 				stack.pop();
 			}
 		}
 	}
 
 	if(((TIMER % 100) == 0) && (GAMEOVER==false)){
+		//console.log("hi");
 		TIMER = 0;
 		stack.push();
 		var M_9 = this.myFrame();
@@ -245,7 +320,7 @@ NVMCClient.drawScene = function (gl) {
 	
 	}
 
-	if(((TIMER+50 % 100) == 0) && (GAMEOVER==false)){
+	if((((TIMER+50) % 100) == 0) && (GAMEOVER==false)){
 		//TIMER = 0;
 		stack.push();
 		var M_9 = this.myFrame();

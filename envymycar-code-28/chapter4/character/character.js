@@ -12,6 +12,7 @@ var UNIT = 1;
 var SWITCHED = false;
 var CANNONTRANSLATE = 0;
 var BUTTONPRESS = false;
+var JUMP = false;
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -163,6 +164,7 @@ NVMCClient.drawBody = function (gl) {
 				SWITCHED=false;
 				TRANSLATEBY=0;
 				BUTTONPRESS=false;
+				JUMP = false;
 			}
 			TRANSLATEBY += (6.0/90) * UNIT;
 		}
@@ -199,6 +201,11 @@ NVMCClient.drawBody = function (gl) {
 	var M_5 = SglMat4.translation([3.5, -1.5, 0]);
 	stack.multiply(M_5);
 
+	if(JUMP == true){
+		var OptTrans = SglMat4.translation([.5, 1, 0]);
+		stack.multiply(OptTrans);
+	}
+
 	
 	this.drawLeg(gl);
 	stack.pop();
@@ -211,6 +218,13 @@ NVMCClient.drawBody = function (gl) {
 	stack.multiply(M_3_sca);
 	var M_5 = SglMat4.translation([-3.5, -1.5, 0]);
 	stack.multiply(M_5);
+
+	if(JUMP == true){
+		var OptTrans = SglMat4.translation([-.5, 1, 0]);
+		stack.multiply(OptTrans);
+	}
+	// var OptRot = SglMat4.rotationAngleAxis(sglDegToRad(30), [0, 0, 1]);
+	// stack.multiply(OptRot);
 
 	this.drawLeg(gl);
 	stack.pop();
@@ -301,12 +315,12 @@ NVMCClient.drawCannon = function (gl) {
 };
 
 
-NVMCClient.generateBall = function (gl, translateX, translateZ, c) {
+NVMCClient.generateBall = function (gl, translateX, translateZ, c, cannonNum) {
 	var stack = this.stack;
-	var array = [[10, 0, -20], [-10, 0, -20]]
+	var array = [[-10, 0, -20], [10, 0, -20]]
 
 	stack.push();
-	var M_OverallTranslate = SglMat4.translation(array[1]);
+	var M_OverallTranslate = SglMat4.translation(array[cannonNum]);
 	stack.multiply(M_OverallTranslate);
 	M_translate = SglMat4.translation([translateX, 0, translateZ]);
 	stack.multiply(M_translate);
@@ -419,6 +433,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
 			BUTTONPRESS = "N";
+			JUMP = true;
 		}
 	};
 	carMotionKey["M"] = function (on) {
@@ -428,6 +443,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
 			BUTTONPRESS = "M";
+			JUMP = true;
 		}
 	};
 	carMotionKey["I"] = function (on) {
