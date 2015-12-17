@@ -293,14 +293,14 @@ NVMCClient.drawCannon = function (gl) {
 };
 
 
-NVMCClient.generateBall = function (gl, translateBall) {
+NVMCClient.generateBall = function (gl, translateX, translateZ) {
 	var stack = this.stack;
-	var array = [[10, 1, -20], [-10, 1, -20]]
+	var array = [[10, 0, -20], [-10, 0, -20]]
 
 	stack.push();
 	var M_OverallTranslate = SglMat4.translation(array[1]);
 	stack.multiply(M_OverallTranslate);
-	M_translate = SglMat4.translation([0, 0, translateBall]);
+	M_translate = SglMat4.translation([translateX, 0, translateZ]);
 	stack.multiply(M_translate);
 	// tra = SglMat4.translation([0, 0, z]);
 	// stack.multiply(tra);

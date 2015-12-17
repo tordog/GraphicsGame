@@ -156,6 +156,20 @@ NVMCClient.drawScene = function (gl) {
 	// 	// this.generateBall(gl, BALLTRANSLATE);
 	// }
 
+	//line stuff
+	cannonPos = [pos[0]-10, pos[1], pos[2]-20];
+	//line from pos to cannonPos? to generate an x, y.
+
+	
+	//increment z by 1 each time.
+	// z+=1;
+	// x = x1 + ((z-z1) / m);
+
+	z1=pos[2];
+	z=cannonPos[2];
+	x1=pos[0];
+	x=cannonPos[0];
+
 
 	for(var i = 0; i<BALLSARRAY.length; i++){
 		if(BALLSARRAY[i].translateBall >= 20){
@@ -164,11 +178,19 @@ NVMCClient.drawScene = function (gl) {
 			i--;
 		}
 		else{
-			BALLSARRAY[i].translateBall += 1;
+			
+			m = (z-z1)/(x-x1);
+			BALLSARRAY[i].translateZ += 1;
+			newZ = z + BALLSARRAY[i].translateZ;
+			newX = x1 + ((newZ - z1)/m);
+			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
+			BALLSARRAY[i].translateX = newX - x;
+			//console.log(BALLSARRAY[i].translateX)
+			//BALLSARRAY[i].translateX = 0;
 			stack.push();
 			var M_9 = this.myFrame();
 			stack.multiply(M_9);
-			this.generateBall(gl, BALLSARRAY[i].translateBall);
+			this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ);
 			stack.pop();
 		}
 	}
@@ -180,11 +202,12 @@ NVMCClient.drawScene = function (gl) {
 		stack.multiply(M_9);
 		var ballObj = {
 			ballGoing: true,
-			translateBall: 1,
+			translateX: 0,
+			translateZ: 0,
 			color: [1.0, 0.0, 0.0]
 		};
 		BALLSARRAY.push(ballObj)
-		this.generateBall(gl, 0);
+		this.generateBall(gl, 0, 0);
 		stack.pop();
 	
 	}
