@@ -3,14 +3,7 @@
 /***********************************************************************/
 var NVMCClient = NVMCClient || {};
 var frontWheelRotate = 0;
-var KEYROTATE = -1;
-var KEYTRANSLATE = [0, 0, 0];
-var ROTATEBY = 0;
-var TRANSLATEBY = 0;
-var ROTATEPOS = true;
-var UNIT = 1;
-var SWITCHED = false;
-var CANNONTRANSLATE = 0;
+
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -132,107 +125,14 @@ NVMCClient.drawLeg = function(gl) {
 }
 
 NVMCClient.drawBody = function (gl) {
-
-	//when we hit a key, we want to rotate by 5 degrees until we've reached 90. let's not do translation for now.
-
 	var stack = this.stack;
 	stack.push();
-	if(KEYROTATE != -1){
-		if(KEYROTATE != 0){
-			if(KEYROTATE == 1){
-				KEYROTATE=0;
-			}
-			if (ROTATEPOS){
-				KEYROTATE -= 5;
-				ROTATEBY += 5;
-			}
-			else {
-				KEYROTATE += 5;
-				ROTATEBY -= 5;
-			}
-			if(SWITCHED && Math.abs(KEYROTATE) == 90){
-				KEYROTATE = -1;
-				ROTATEBY = 0;
-				SWITCHED=false;
-				TRANSLATEBY=0;
-			}
-			TRANSLATEBY += (6.0/90) * UNIT;
-		}
-		else{
-			if(ROTATEPOS){
-				ROTATEPOS = false;
-			}
-			else {
-				ROTATEPOS = true;
-			}
-			KEYROTATE = 1;
-			//TRANSLATEBY += (6.0/90);
-			// ROTATEBY = 0;
-			UNIT = -1;
-			SWITCHED = true;
-		}
-	}
 
-
-	var M_OverallTranslate = SglMat4.translation([0, TRANSLATEBY, 0]);
+	var M_OverallTranslate = SglMat4.translation([1, 0, 1]);
 	stack.multiply(M_OverallTranslate);
-	var M_OverallRotate = SglMat4.rotationAngleAxis(sglDegToRad(ROTATEBY), [0, 0, 1]);
-	stack.multiply(M_OverallRotate);
-	var M_up = SglMat4.translation([0, .15, 0]);
-	stack.multiply(M_up);
+	
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, [0.0, 0.7, 0.2, 1.0], [0, 0, 0, 1.0]);
-
-	stack.push();
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(30), [0, 0, 1]);
-	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.25, .5, .25]);
-	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([3.5, -1.5, 0]);
-	stack.multiply(M_5);
-
-	
-	this.drawLeg(gl);
-	stack.pop();
-
-
-	stack.push();
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-30), [0, 0, 1]);
-	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.25, .5, .25]);
-	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([-3.5, -1.5, 0]);
-	stack.multiply(M_5);
-
-	this.drawLeg(gl);
-	stack.pop();
-
-	stack.push();
-
-
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
-	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.2, .3, .2]);
-	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([3, 4.5, 0]);
-	stack.multiply(M_5);
-
-	this.drawLeg(gl);
-	stack.pop();
-	// this.drawArm(gl)
-
-	stack.push();
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-45), [0, 0, 1]);
-	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.2, .3, .2]);
-	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([-3, 4.5, 0]);
-	stack.multiply(M_5);
-
-	this.drawLeg(gl);
-	stack.pop();
-
-	// this.drawArm(gl)
 
 	stack.pop();
 
@@ -276,44 +176,6 @@ NVMCClient.drawTree = function (gl) {
 	stack.pop();
 };
 
-NVMCClient.drawCannon = function (gl) {
-	var stack = this.stack;
-	var array = [[10, 1, -20], [-10, 1, -20]]
-	for(var i=0; i<2; i++){
-		stack.push();
-		var M_OverallTranslate = SglMat4.translation(array[i]);
-		stack.multiply(M_OverallTranslate);
-		
-		gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-		this.drawObject(gl, this.cube, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
-
-		stack.pop();
-	}
-	
-};
-
-NVMCClient.generateBall = function (gl) {
-	var stack = this.stack;
-	var array = [[10, 1, -20], [-10, 1, -20]]
-	if(CANNONTRANSLATE == 20){
-		CANNONTRANSLATE = 0;
-	}
-	CANNONTRANSLATE	+= 1;
-	for(var i=0; i<2; i++){
-		stack.push();
-		var M_OverallTranslate = SglMat4.translation(array[i]);
-		stack.multiply(M_OverallTranslate);
-		tra = SglMat4.translation([0, 0, CANNONTRANSLATE]);
-		stack.multiply(tra);
-		
-		gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-		this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
-
-		stack.pop();
-	}
-	
-};
-
 NVMCClient.drawScene = function (gl) {
 	var pos = this.myPos();
 
@@ -349,9 +211,9 @@ NVMCClient.drawScene = function (gl) {
 	
 	var M_9 = this.myFrame();
 	stack.multiply(M_9);
+	
 	this.drawGroup(gl);
 	stack.pop();
-
 
 	// var trees = this.game.race.trees;
 	// for (var t in trees) {

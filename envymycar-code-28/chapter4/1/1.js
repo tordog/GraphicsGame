@@ -2,6 +2,7 @@
 // ID 4.1
 /***********************************************************************/
 var NVMCClient = NVMCClient || {};
+var TIMER = 0;
 /***********************************************************************/
 
 function PhotographerCamera() {//line 7, Listing 4.6
@@ -139,6 +140,31 @@ NVMCClient.drawScene = function (gl) {
 	stack.multiply(M_9);
 	//this.drawCar(gl);
 	this.drawCharacter(gl);
+	stack.pop();
+	TIMER += 1;
+
+	if((TIMER % 100) == 0){
+		//console.log("entering?");
+		TIMER = 0;
+		// var timer = 1;
+		// var translate = 0;
+		// timer += 1;
+		translate+=1;
+		stack.push();
+		var M_9 = this.myFrame();
+		stack.multiply(M_9);
+		var M_translate = SglMat4.translation([0, 0, translate]);
+		stack.multiply(tra);
+		this.generateBall(gl);
+		stack.pop();
+	
+		
+	}
+
+	stack.push();
+	var M_9 = this.myFrame();
+	stack.multiply(M_9);
+	this.drawCannon(gl);
 	stack.pop();
 
 	// var trees = this.game.race.trees;
