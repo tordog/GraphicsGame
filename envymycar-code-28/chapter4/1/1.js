@@ -88,7 +88,7 @@ function ChaseCamera() {//line 74, Listnig 4.5{
 	this.mouseButtonUp 		= function () {}
 	this.setView 					= function ( stack, F_0) {
 		var Rx = SglMat4.rotationAngleAxis(sglDegToRad(-15), [1.0, 0.0, 0.0]);
-		var T = SglMat4.translation([0.0, 2.5, 4.5]);
+		var T = SglMat4.translation([0.0, 5.5, 8.5]);
 		var Vc_0 = SglMat4.mul(T, Rx);
 		var V_0 = SglMat4.mul(F_0, Vc_0);
 		this.position = SglMat4.col(V_0,3);
@@ -174,7 +174,7 @@ NVMCClient.drawScene = function (gl) {
 		else{
 			
 			m = (z-z1)/(x-x1);
-			BALLSARRAY1[i].translateZ += .1;
+			BALLSARRAY1[i].translateZ += .4;
 			newZ = z + BALLSARRAY1[i].translateZ;
 			newX = x1 + ((newZ - z1)/m);
 			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
@@ -242,7 +242,7 @@ NVMCClient.drawScene = function (gl) {
 		else{
 			
 			m = (z-z1)/(x-x1);
-			BALLSARRAY2[i].translateZ += .1;
+			BALLSARRAY2[i].translateZ += .4;
 			newZ = z + BALLSARRAY2[i].translateZ;
 			newX = x1 + ((newZ - z1)/m);
 			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);

@@ -12,7 +12,9 @@ var UNIT = 1;
 var SWITCHED = false;
 var CANNONTRANSLATE = 0;
 var BUTTONPRESS = false;
-var JUMP = false;
+var JUMPPARAMS = [false, 0, 0, 45]; //boolean, translateBy, counter, angle of rotation
+var ROTANGLE = 50;
+var UNITR = 1;
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -85,6 +87,7 @@ NVMCClient.createObjects = function () {
 	this.cylinder = new Cylinder(10);
 	this.cone = new Cone(10);
 	this.sphere = new SphereSubd(10);
+	this.sphere_size = new SphereSubdSize(10);
 
 
 	this.track = new Track(this.game.race.track);
@@ -111,6 +114,7 @@ NVMCClient.createBuffers = function (gl) {
 	this.createObjectBuffers(gl, this.track);
 	this.createObjectBuffers(gl, this.ground);
 	this.createObjectBuffers(gl, this.sphere);
+	this.createObjectBuffers(gl, this.sphere_size);
 
 	for (var i = 0; i < this.buildings.length; ++i) {
 		this.createObjectBuffers(gl, this.buildings[i]);
@@ -133,17 +137,28 @@ NVMCClient.drawLeg = function(gl) {
 	stack.pop();
 }
 
-NVMCClient.drawBody = function (gl) {
+NVMCClient.jump = function() {
+	//translate up by 2
+	JUMPPARAMS[3] = 45;
+	if(JUMPPARAMS[2] == 40){
+		JUMPPARAMS[0] = false;
+		JUMPPARAMS[1]=0;
+		JUMPPARAMS[2] = 0;
+		BUTTONPRESS = false;
+		JUMPPARAMS[3] = 0;
+	}
+	else if(JUMPPARAMS[2]<=20){
+		JUMPPARAMS[1] += .1;
+	}
+	else{
+		JUMPPARAMS[1] -= .1;
+	}
+	console.log(JUMPPARAMS[1]);
+	JUMPPARAMS[2]++;
 
-	//when we hit a key, we want to rotate by 5 degrees until we've reached 90. let's not do translation for now.
+}
 
-	//TORDOG
-
-	
-
-	var stack = this.stack;
-	stack.push();
-
+NVMCClient.dodge = function () {
 
 	if(KEYROTATE != -1){
 		if(KEYROTATE != 0){
@@ -164,7 +179,7 @@ NVMCClient.drawBody = function (gl) {
 				SWITCHED=false;
 				TRANSLATEBY=0;
 				BUTTONPRESS=false;
-				JUMP = false;
+				JUMPPARAMS[0] = false;
 			}
 			TRANSLATEBY += (6.0/90) * UNIT;
 		}
@@ -182,49 +197,106 @@ NVMCClient.drawBody = function (gl) {
 			SWITCHED = true;
 		}
 	}
-	
 
-	var M_OverallTranslate = SglMat4.translation([0, TRANSLATEBY, 0]);
-	stack.multiply(M_OverallTranslate);
-	var M_OverallRotate = SglMat4.rotationAngleAxis(sglDegToRad(ROTATEBY), [0, 0, 1]);
-	stack.multiply(M_OverallRotate);
+}
+
+NVMCClient.drawBody = function (gl) {
+
+	//when we hit a key, we want to rotate by 5 degrees until we've reached 90. let's not do translation for now.
+
+	//TORDOG
+
+	var stack = this.stack;
+	stack.push();
+
+	if(BUTTONPRESS == "I"){
+		this.jump();
+		var M_OverallTranslate = SglMat4.translation([0, JUMPPARAMS[1], 0]);
+		stack.multiply(M_OverallTranslate);
+	}
+
+	else if(BUTTONPRESS == "N" || BUTTONPRESS == "M"){
+		this.dodge();
+		var M_OverallTranslate = SglMat4.translation([0, TRANSLATEBY, 0]);
+		stack.multiply(M_OverallTranslate);
+		var M_OverallRotate = SglMat4.rotationAngleAxis(sglDegToRad(ROTATEBY), [0, 0, 1]);
+		stack.multiply(M_OverallRotate);
+	}
+
 	var M_up = SglMat4.translation([0, .15, 0]);
 	stack.multiply(M_up);
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, [0.0, 0.7, 0.2, 1.0], [0, 0, 0, 1.0]);
 
 	stack.push();
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(30), [0, 0, 1]);
+
+	var r_further = 0;
+	var tx_further=0;
+	var ty_further=0;
+	var s_further = 0;
+	if(BUTTONPRESS == "M" || BUTTONPRESS == "N"){
+		// var OptTrans = SglMat4.translation([.5, 1, 0]);
+		// stack.multiply(OptTrans);
+		tx_further=-1;
+		ty_further=1;
+	}
+	else if (BUTTONPRESS == "I"){
+		r_further = 40
+		tx_further = 1.5;
+		s_further = .5;
+		// var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
+		// stack.multiply(M_3_rot2);
+	}
+
+
+	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(30+r_further), [0, 0, 1]);
 	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.25, .5, .25]);
+	var M_3_sca = SglMat4.scaling([.25, .5 + s_further, .25]);
 	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([3.5, -1.5, 0]);
+	var M_5 = SglMat4.translation([3.5 + tx_further, -1.5 + ty_further, 0]);
 	stack.multiply(M_5);
 
-	if(JUMP == true){
-		var OptTrans = SglMat4.translation([.5, 1, 0]);
-		stack.multiply(OptTrans);
-	}
+	// if(BUTTONPRESS == "M" || BUTTONPRESS == "N"){
+	// 	var OptTrans = SglMat4.translation([.5, 1, 0]);
+	// 	stack.multiply(OptTrans);
+	// }
+	// else if (BUTTONPRESS == "I"){
+	// 	var M_5 = SglMat4.translation([1, 1, 0]);
+	// 	stack.multiply(M_5);
+	// 	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(120), [1, 1, 0]);
+	// 	stack.multiply(M_3_rot2);
+	// }
+	
 
 	
 	this.drawLeg(gl);
 	stack.pop();
 
-
+	r_further=0;
+	tx_further=0;
+	ty_further=0;
+	s_further=0;
 	stack.push();
-	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-30), [0, 0, 1]);
+	if(BUTTONPRESS == "M" || BUTTONPRESS == "N"){
+		tx_further = 1;
+		ty_further = 1;
+	}
+	else if (BUTTONPRESS == "I"){
+		r_further = -40
+		tx_further = -1.5;
+		s_further = .5;
+		// var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
+		// stack.multiply(M_3_rot2);
+	}
+	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-30 + r_further), [0, 0, 1]);
 	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.25, .5, .25]);
+	var M_3_sca = SglMat4.scaling([.25, .5+ s_further, .25]);
 	stack.multiply(M_3_sca);
-	var M_5 = SglMat4.translation([-3.5, -1.5, 0]);
+	var M_5 = SglMat4.translation([-3.5+ tx_further, -1.5+ty_further, 0]);
 	stack.multiply(M_5);
 
-	if(JUMP == true){
-		var OptTrans = SglMat4.translation([-.5, 1, 0]);
-		stack.multiply(OptTrans);
-	}
-	// var OptRot = SglMat4.rotationAngleAxis(sglDegToRad(30), [0, 0, 1]);
-	// stack.multiply(OptRot);
+	
+	
 
 	this.drawLeg(gl);
 	stack.pop();
@@ -232,9 +304,24 @@ NVMCClient.drawBody = function (gl) {
 	stack.push();
 
 
+	if(ROTANGLE < 40){
+		UNITR = .3;
+	}
+	else if(ROTANGLE > 50){
+		UNITR = -.3;
+	}
+
+	ROTANGLE += UNITR;
+
+	if (BUTTONPRESS == "I"){
+		s_further = .05;
+		// var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
+		// stack.multiply(M_3_rot2);
+	}
+
 	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
 	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.2, .3, .2]);
+	var M_3_sca = SglMat4.scaling([.2, .3+s_further, .2]);
 	stack.multiply(M_3_sca);
 	var M_5 = SglMat4.translation([3, 4.5, 0]);
 	stack.multiply(M_5);
@@ -246,7 +333,7 @@ NVMCClient.drawBody = function (gl) {
 	stack.push();
 	var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-45), [0, 0, 1]);
 	stack.multiply(M_3_rot2);
-	var M_3_sca = SglMat4.scaling([.2, .3, .2]);
+	var M_3_sca = SglMat4.scaling([.2, .3+s_further, .2]);
 	stack.multiply(M_3_sca);
 	var M_5 = SglMat4.translation([-3, 4.5, 0]);
 	stack.multiply(M_5);
@@ -305,9 +392,13 @@ NVMCClient.drawCannon = function (gl) {
 		stack.push();
 		var M_OverallTranslate = SglMat4.translation(array[i]);
 		stack.multiply(M_OverallTranslate);
+		var M_0_sca = SglMat4.scaling([1.5, 1.5, 1.5]);
+		stack.multiply(M_0_sca);
+		var M_0_tra1 = SglMat4.translation([0, -.70, 0]);
+		stack.multiply(M_0_tra1);
 		
 		gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-		this.drawObject(gl, this.cube, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
+		this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
 
 		stack.pop();
 	}
@@ -411,19 +502,19 @@ NVMCClient.initMotionKeyHandlers = function () {
 
 	var carMotionKey = {};
 	carMotionKey["W"] = function (on) {
-		game.playerAccelerate = on;
+		//game.playerAccelerate = on;
 		//frontWheelRotate = 0;
 	};
 	carMotionKey["S"] = function (on) {
-		game.playerBrake = on;
+		//game.playerBrake = on;
 		//frontWheelRotate = 0;
 	};
 	carMotionKey["A"] = function (on) {
-		game.playerSteerLeft = on;
+		//game.playerSteerLeft = on;
 		//frontWheelRotate = 30;
 	};
 	carMotionKey["D"] = function (on) {
-		game.playerSteerRight = on;
+		//game.playerSteerRight = on;
 		//frontWheelRotate = -30;
 	};
 	carMotionKey["N"] = function (on) {
@@ -433,7 +524,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
 			BUTTONPRESS = "N";
-			JUMP = true;
+			//JUMPPARAMS[0] = true;
 		}
 	};
 	carMotionKey["M"] = function (on) {
@@ -443,12 +534,14 @@ NVMCClient.initMotionKeyHandlers = function () {
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
 			BUTTONPRESS = "M";
-			JUMP = true;
+			//JUMPPARAMS[0] = true;
 		}
 	};
 	carMotionKey["I"] = function (on) {
 		//TORDOG
-		// BUTTONPRESS = "I";
+		if (BUTTONPRESS == false){
+			BUTTONPRESS = "I";
+		}
 		// // KEYTRANSLATE = [0, 3, 0];
 		// // TRANSLATEBY = -1;
 	}
@@ -466,6 +559,7 @@ NVMCClient.onInitialize = function () {// line 290, Listing 4.2{
 	this.stack = new SglMatrixStack();
 	this.initializeObjects(gl); //LINE 297}
 	this.uniformShader = new uniformShader(gl);
+	
 };
 
 NVMCClient.onTerminate = function () {};
