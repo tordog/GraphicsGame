@@ -3,6 +3,9 @@
 /***********************************************************************/
 var NVMCClient = NVMCClient || {};
 var TIMER = 0;
+//var BALLTRANSLATE=0;
+//var BALLGOING = false;
+var BALLSARRAY = [];
 /***********************************************************************/
 
 function PhotographerCamera() {//line 7, Listing 4.6
@@ -143,22 +146,47 @@ NVMCClient.drawScene = function (gl) {
 	stack.pop();
 	TIMER += 1;
 
+	//for all objects in array...
+	// if (BALLGOING == true){
+	// 	// BALLTRANSLATE += 1;
+	// 	// if BALLTRANSLATE >= 20){
+	// 	// 	BALLTRANSLATE = 0;
+	// 	// 	BALLGOING = false;
+	// 	// }
+	// 	// this.generateBall(gl, BALLTRANSLATE);
+	// }
+
+
+	for(var i = 0; i<BALLSARRAY.length; i++){
+		if(BALLSARRAY[i].translateBall >= 20){
+			//remove BALLSARRAY[0] since that's what it should be.
+			BALLSARRAY.shift();
+			i--;
+		}
+		else{
+			BALLSARRAY[i].translateBall += 1;
+			stack.push();
+			var M_9 = this.myFrame();
+			stack.multiply(M_9);
+			this.generateBall(gl, BALLSARRAY[i].translateBall);
+			stack.pop();
+		}
+	}
+
 	if((TIMER % 100) == 0){
-		//console.log("entering?");
 		TIMER = 0;
-		// var timer = 1;
-		// var translate = 0;
-		// timer += 1;
-		translate+=1;
 		stack.push();
 		var M_9 = this.myFrame();
 		stack.multiply(M_9);
-		var M_translate = SglMat4.translation([0, 0, translate]);
-		stack.multiply(tra);
-		this.generateBall(gl);
+		var ballObj = {
+			ballGoing: true,
+			translateBall: 1,
+			color: [1.0, 0.0, 0.0]
+		};
+		BALLSARRAY.push(ballObj)
+		this.generateBall(gl, 0);
 		stack.pop();
 	
-		
 	}
 
 	stack.push();

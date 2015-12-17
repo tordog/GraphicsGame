@@ -292,25 +292,24 @@ NVMCClient.drawCannon = function (gl) {
 	
 };
 
-NVMCClient.generateBall = function (gl) {
+
+NVMCClient.generateBall = function (gl, translateBall) {
 	var stack = this.stack;
 	var array = [[10, 1, -20], [-10, 1, -20]]
-	if(CANNONTRANSLATE == 20){
-		CANNONTRANSLATE = 0;
-	}
-	CANNONTRANSLATE	+= 1;
-	for(var i=0; i<2; i++){
-		stack.push();
-		var M_OverallTranslate = SglMat4.translation(array[i]);
-		stack.multiply(M_OverallTranslate);
-		tra = SglMat4.translation([0, 0, CANNONTRANSLATE]);
-		stack.multiply(tra);
-		
-		gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-		this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
 
-		stack.pop();
-	}
+	stack.push();
+	var M_OverallTranslate = SglMat4.translation(array[1]);
+	stack.multiply(M_OverallTranslate);
+	M_translate = SglMat4.translation([0, 0, translateBall]);
+	stack.multiply(M_translate);
+	// tra = SglMat4.translation([0, 0, z]);
+	// stack.multiply(tra);
+	
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
+
+	stack.pop();
+	
 	
 };
 
