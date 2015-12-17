@@ -5,7 +5,10 @@ var NVMCClient = NVMCClient || {};
 var TIMER = 0;
 //var BALLTRANSLATE=0;
 //var BALLGOING = false;
-var BALLSARRAY = [];
+var BALLSARRAY1 = [];
+var BALLSARRAY1 = [];
+var GAMEOVER = false;
+// var BUTTONPRESS = false;
 /***********************************************************************/
 
 function PhotographerCamera() {//line 7, Listing 4.6
@@ -146,20 +149,9 @@ NVMCClient.drawScene = function (gl) {
 	stack.pop();
 	TIMER += 1;
 
-	//for all objects in array...
-	// if (BALLGOING == true){
-	// 	// BALLTRANSLATE += 1;
-	// 	// if BALLTRANSLATE >= 20){
-	// 	// 	BALLTRANSLATE = 0;
-	// 	// 	BALLGOING = false;
-	// 	// }
-	// 	// this.generateBall(gl, BALLTRANSLATE);
-	// }
-
 	//line stuff
 	cannonPos = [pos[0]-10, pos[1], pos[2]-20];
 	//line from pos to cannonPos? to generate an x, y.
-
 	
 	//increment z by 1 each time.
 	// z+=1;
@@ -172,7 +164,7 @@ NVMCClient.drawScene = function (gl) {
 
 
 	for(var i = 0; i<BALLSARRAY.length; i++){
-		if(BALLSARRAY[i].translateBall >= 20){
+		if(BALLSARRAY[i].translateZ >= 25){
 			//remove BALLSARRAY[0] since that's what it should be.
 			BALLSARRAY.shift();
 			i--;
@@ -180,34 +172,106 @@ NVMCClient.drawScene = function (gl) {
 		else{
 			
 			m = (z-z1)/(x-x1);
-			BALLSARRAY[i].translateZ += 1;
+			BALLSARRAY[i].translateZ += .1;
 			newZ = z + BALLSARRAY[i].translateZ;
 			newX = x1 + ((newZ - z1)/m);
 			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
 			BALLSARRAY[i].translateX = newX - x;
-			//console.log(BALLSARRAY[i].translateX)
-			//BALLSARRAY[i].translateX = 0;
-			stack.push();
-			var M_9 = this.myFrame();
-			stack.multiply(M_9);
-			this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ);
-			stack.pop();
+
+			//detect collisions
+			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
+			
+			if(distance <= 1) {
+				if((BALLSARRAY[i].colorStr == "red") && (this.getButtonPress() != "N")){
+					console.log("HIT RED! You didn't press 'N' at the right time.");
+					BALLSARRAY = [];
+					GAMEOVER=true;
+				}
+				else if((BALLSARRAY[i].colorStr == "blue") && (this.getButtonPress() != "M")){
+					console.log("HIT BLUE! You didn't press 'M' at the right time.");
+					BALLSARRAY = [];
+					GAMEOVER=true;
+				}
+				else{
+					//console.log(BALLSARRAY[i].translateX)
+					//BALLSARRAY[i].translateX = 0;
+					stack.push();
+					var M_9 = this.myFrame();
+					stack.multiply(M_9);
+					this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ, BALLSARRAY[i].color);
+					stack.pop();
+				}
+			}
+			else{
+				//console.log(BALLSARRAY[i].translateX)
+				//BALLSARRAY[i].translateX = 0;
+				stack.push();
+				var M_9 = this.myFrame();
+				stack.multiply(M_9);
+				this.generateBall(gl, BALLSARRAY[i].translateX, BALLSARRAY[i].translateZ, BALLSARRAY[i].color);
+				stack.pop();
+			}
 		}
 	}
 
-	if((TIMER % 100) == 0){
+	if(((TIMER % 100) == 0) && (GAMEOVER==false)){
 		TIMER = 0;
 		stack.push();
 		var M_9 = this.myFrame();
 		stack.multiply(M_9);
+		var red=Math.floor((Math.random() * 2));
+		var green=Math.floor((Math.random() * 2));
+		var blue=Math.floor((Math.random() * 2));
+		var cString = "";
+		if(red == 1){
+			green=0;
+			blue=0;
+			cString = "red";
+		}
+		else{
+			blue=1;
+			green=1;
+			cString = "blue";
+		}
 		var ballObj = {
-			ballGoing: true,
 			translateX: 0,
 			translateZ: 0,
-			color: [1.0, 0.0, 0.0]
+			color: [red, green, blue, 1.0],
+			colorStr: cString
 		};
-		BALLSARRAY.push(ballObj)
-		this.generateBall(gl, 0, 0);
+		BALLSARRAY1.push(ballObj)
+		this.generateBall(gl, 0, 0, ballObj.color, 0); //cannonNum
+		stack.pop();
+	
+	}
+
+	if(((TIMER+50 % 100) == 0) && (GAMEOVER==false)){
+		//TIMER = 0;
+		stack.push();
+		var M_9 = this.myFrame();
+		stack.multiply(M_9);
+		var red=Math.floor((Math.random() * 2));
+		var green=Math.floor((Math.random() * 2));
+		var blue=Math.floor((Math.random() * 2));
+		var cString = "";
+		if(red == 1){
+			green=0;
+			blue=0;
+			cString = "red";
+		}
+		else{
+			blue=1;
+			green=1;
+			cString = "blue";
+		}
+		var ballObj = {
+			translateX: 0,
+			translateZ: 0,
+			color: [red, green, blue, 1.0],
+			colorStr: cString
+		};
+		BALLSARRAY2.push(ballObj)
+		this.generateBall(gl, 0, 0, ballObj.color, 1); //cannonNum
 		stack.pop();
 	
 	}

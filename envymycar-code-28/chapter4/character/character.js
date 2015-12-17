@@ -11,6 +11,7 @@ var ROTATEPOS = true;
 var UNIT = 1;
 var SWITCHED = false;
 var CANNONTRANSLATE = 0;
+var BUTTONPRESS = false;
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -135,8 +136,14 @@ NVMCClient.drawBody = function (gl) {
 
 	//when we hit a key, we want to rotate by 5 degrees until we've reached 90. let's not do translation for now.
 
+	//TORDOG
+
+	
+
 	var stack = this.stack;
 	stack.push();
+
+
 	if(KEYROTATE != -1){
 		if(KEYROTATE != 0){
 			if(KEYROTATE == 1){
@@ -155,6 +162,7 @@ NVMCClient.drawBody = function (gl) {
 				ROTATEBY = 0;
 				SWITCHED=false;
 				TRANSLATEBY=0;
+				BUTTONPRESS=false;
 			}
 			TRANSLATEBY += (6.0/90) * UNIT;
 		}
@@ -172,7 +180,7 @@ NVMCClient.drawBody = function (gl) {
 			SWITCHED = true;
 		}
 	}
-
+	
 
 	var M_OverallTranslate = SglMat4.translation([0, TRANSLATEBY, 0]);
 	stack.multiply(M_OverallTranslate);
@@ -293,7 +301,7 @@ NVMCClient.drawCannon = function (gl) {
 };
 
 
-NVMCClient.generateBall = function (gl, translateX, translateZ) {
+NVMCClient.generateBall = function (gl, translateX, translateZ, c) {
 	var stack = this.stack;
 	var array = [[10, 0, -20], [-10, 0, -20]]
 
@@ -302,16 +310,22 @@ NVMCClient.generateBall = function (gl, translateX, translateZ) {
 	stack.multiply(M_OverallTranslate);
 	M_translate = SglMat4.translation([translateX, 0, translateZ]);
 	stack.multiply(M_translate);
+	var M_3_sca = SglMat4.scaling([.5, .5, .5]);
+	stack.multiply(M_3_sca);
 	// tra = SglMat4.translation([0, 0, z]);
 	// stack.multiply(tra);
 	
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-	this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
+	this.drawObject(gl, this.sphere, c, [0, 0, 0, 1.0]);
 
 	stack.pop();
 	
 	
 };
+
+NVMCClient.getButtonPress = function () {
+	return BUTTONPRESS;
+}
 
 NVMCClient.drawScene = function (gl) {
 	var pos = this.myPos();
@@ -404,6 +418,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 			ROTATEPOS = true;
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
+			BUTTONPRESS = "N";
 		}
 	};
 	carMotionKey["M"] = function (on) {
@@ -412,8 +427,15 @@ NVMCClient.initMotionKeyHandlers = function () {
 			ROTATEPOS = false;
 			KEYTRANSLATE = [0, 2, 0];
 			UNIT = 1;
+			BUTTONPRESS = "M";
 		}
 	};
+	carMotionKey["I"] = function (on) {
+		//TORDOG
+		// BUTTONPRESS = "I";
+		// // KEYTRANSLATE = [0, 3, 0];
+		// // TRANSLATEBY = -1;
+	}
 	this.carMotionKey = carMotionKey;
 };
 
