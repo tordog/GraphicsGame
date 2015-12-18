@@ -158,12 +158,14 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					BALLSARRAY1 = [];
 					BALLSARRAY2 = [];
 					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
 					BALLSARRAY1 = [];
 					BALLSARRAY2 = [];
 					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
 				}
 				else{

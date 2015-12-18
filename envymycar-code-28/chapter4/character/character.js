@@ -13,9 +13,10 @@ var SWITCHED = false;
 var CANNONTRANSLATE = 0;
 var BUTTONPRESS = false;
 var JUMPPARAMS = [false, 0, 0, 45]; //boolean, translateBy, counter, angle of rotation
-var ROTANGLE = 50;
+var ROTANGLE = 3;
 var UNITR = 1;
 var GAMEOVER = true;
+var BODY_COLOR = [0.0, 0.7, 0.2, 1.0];
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -132,7 +133,7 @@ NVMCClient.drawLeg = function(gl) {
 	stack.push();
 
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-	this.drawObject(gl, this.sphere, [0.0, 0.7, 0.2, 1.0], [0, 0, 0, 1.0]);
+	this.drawObject(gl, this.sphere, BODY_COLOR, [0, 0, 0, 1.0]);
 	// var M_3_sca = SglMat4.scaling([1, 10, 1]);
 	// stack.multiply(M_3_sca);
 	stack.pop();
@@ -205,6 +206,64 @@ NVMCClient.dodge = function () {
 
 }
 
+NVMCClient.drawHead = function (gl) {
+	var stack = this.stack;
+	stack.push();
+
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, BODY_COLOR, [0, 0, 0, 1.0]);
+	// var M_3_sca = SglMat4.scaling([1, 1, 1]);
+	// stack.multiply(M_3_sca);
+
+	//stack.push();
+
+	//var M_3_sca = SglMat4.scaling([.3, .3, .3]);
+	//stack.multiply(M_3_sca);
+	//var M_tr = SglMat4.translation([1.5, 6, 12]);
+	//stack.multiply(M_tr);
+	
+	//this.drawEye(gl);
+	//stack.pop();
+
+	//stack.push();
+	//var M_3_sca = SglMat4.scaling([.3, .3, .3]);
+	//stack.multiply(M_3_sca);
+	//var M_tr = SglMat4.translation([-1.5, 6, 12]);
+	//stack.multiply(M_tr);
+	//this.drawEye(gl);
+	//stack.pop();
+
+	stack.pop();
+}
+
+NVMCClient.drawEye = function (gl) {
+	var stack = this.stack;
+	stack.push();
+
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [1.0, 1.0, 1.0, 1.0], [0, 0, 0, 1.0]);
+	// var M_3_sca = SglMat4.scaling([1, 1, 1]);
+	// stack.multiply(M_3_sca);
+
+	stack.pop();
+}
+
+NVMCClient.drawStomach = function (gl) {
+	var stack = this.stack;
+	stack.push();
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [0.8, 1.0, .4, 1.0], [0, 0, 0, 1.0]);
+	stack.pop();
+}
+
+NVMCClient.drawTail = function (gl) {
+	var stack = this.stack;
+	stack.push();
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.cone, BODY_COLOR, [0, 0, 0, 1.0]);
+	stack.pop();
+}
+
 NVMCClient.drawBody = function (gl) {
 
 	//when we hit a key, we want to rotate by 5 degrees until we've reached 90. let's not do translation for now.
@@ -231,7 +290,39 @@ NVMCClient.drawBody = function (gl) {
 	var M_up = SglMat4.translation([0, .15, 0]);
 	stack.multiply(M_up);
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-	this.drawObject(gl, this.sphere, [0.0, 0.7, 0.2, 1.0], [0, 0, 0, 1.0]);
+	this.drawObject(gl, this.sphere, BODY_COLOR, [0, 0, 0, 1.0]);
+
+	//stack.push();
+	//var M_5 = SglMat4.translation([0, .45, .5]);
+	//stack.multiply(M_5);
+	//var M_3_sca = SglMat4.scaling([.6, .7, .6]);
+	//stack.multiply(M_3_sca);
+	//this.drawStomach(gl);
+	//stack.pop();
+
+	if(GAMEOVER == false) {
+		if(ROTANGLE < -3){
+		UNITR = .3;
+		}
+		else if(ROTANGLE > 8){
+			UNITR = -.3;
+		}
+
+		ROTANGLE += UNITR;
+	}
+
+	stack.push();
+	var M_5 = SglMat4.translation([0, .6, 1]);
+	stack.multiply(M_5);
+	var M_3_sca = SglMat4.scaling([.2, .2, .4]);
+	stack.multiply(M_3_sca);
+	var M_yrot = SglMat4.rotationAngleAxis(sglDegToRad(80), [1, 0, 0]);
+	stack.multiply(M_yrot);
+	var M_zrot = SglMat4.rotationAngleAxis(sglDegToRad(ROTANGLE), [0, 0, 1]);
+	stack.multiply(M_zrot);
+	this.drawTail(gl);
+	stack.pop();
+	
 
 	stack.push();
 
@@ -309,15 +400,6 @@ NVMCClient.drawBody = function (gl) {
 	stack.push();
 
 
-	if(ROTANGLE < 40){
-		UNITR = .3;
-	}
-	else if(ROTANGLE > 50){
-		UNITR = -.3;
-	}
-
-	ROTANGLE += UNITR;
-
 	if (BUTTONPRESS == "I"){
 		s_further = .05;
 		// var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(45), [0, 0, 1]);
@@ -346,6 +428,22 @@ NVMCClient.drawBody = function (gl) {
 	this.drawLeg(gl);
 	stack.pop();
 
+	stack.push();
+	//var M_3_rot2 = SglMat4.rotationAngleAxis(sglDegToRad(-45), [0, 0, 1]);
+	//stack.multiply(M_3_rot2);
+	var M_3_sca = SglMat4.scaling([.35, .4, .35]);
+	stack.multiply(M_3_sca);
+	var M_5 = SglMat4.translation([0, 4.8, 0]);
+	stack.multiply(M_5);
+
+	if(BUTTONPRESS == "M" || BUTTONPRESS == "N"){
+		var M_5 = SglMat4.translation([0, -1, 0]);
+		stack.multiply(M_5);
+	}
+
+	this.drawHead(gl);
+	stack.pop();
+
 	// this.drawArm(gl)
 
 	stack.pop();
@@ -355,7 +453,23 @@ NVMCClient.drawBody = function (gl) {
 NVMCClient.drawCharacter = function (gl) {
 	var stack = this.stack;
 	stack.push();
+	var M_3_sca = SglMat4.scaling([.75, 2, .15]);
+	stack.multiply(M_3_sca);
+	var M_5 = SglMat4.translation([5, 0, 0]);
+	stack.multiply(M_5);
+	this.drawWall(gl);
+	stack.pop();
+
+	stack.push();
 	this.drawBody(gl);
+	stack.pop();
+}
+
+NVMCClient.drawWall = function (gl) {
+	var stack = this.stack;
+	stack.push();
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.cube, [1., 1.0, 1.0, 1.0], [0, 0, 0, 1.0]);
 	stack.pop();
 }
 
@@ -455,6 +569,10 @@ NVMCClient.getButtonPress = function () {
 	return BUTTONPRESS;
 };
 
+NVMCClient.setBodyColor = function (color) {
+	BODY_COLOR = color;
+};
+
 NVMCClient.drawScene = function (gl) {
 	var pos = this.myPos();
 
@@ -532,6 +650,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 		//game.playerBrake = on;
 		//frontWheelRotate = 0;
 		GAMEOVER=false;
+		BODY_COLOR = [0.0, 0.7, 0.2, 1.0];
 	};
 	carMotionKey["A"] = function (on) {
 		//game.playerSteerLeft = on;
