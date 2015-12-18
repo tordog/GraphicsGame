@@ -15,6 +15,7 @@ var BUTTONPRESS = false;
 var JUMPPARAMS = [false, 0, 0, 45]; //boolean, translateBy, counter, angle of rotation
 var ROTANGLE = 50;
 var UNITR = 1;
+var GAMEOVER = true;
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -156,6 +157,10 @@ NVMCClient.jump = function() {
 	console.log(JUMPPARAMS[1]);
 	JUMPPARAMS[2]++;
 
+}
+
+NVMCClient.getGameover = function () {
+	return GAMEOVER;
 }
 
 NVMCClient.dodge = function () {
@@ -508,6 +513,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 	carMotionKey["S"] = function (on) {
 		//game.playerBrake = on;
 		//frontWheelRotate = 0;
+		GAMEOVER=false;
 	};
 	carMotionKey["A"] = function (on) {
 		//game.playerSteerLeft = on;

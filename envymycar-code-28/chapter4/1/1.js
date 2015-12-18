@@ -7,7 +7,7 @@ var TIMER = 0;
 //var BALLGOING = false;
 var BALLSARRAY1 = [];
 var BALLSARRAY2 = [];
-var GAMEOVER = false;
+var GAMEOVER = true;
 var POINTS = 0;
 // var BUTTONPRESS = false;
 /***********************************************************************/
@@ -112,7 +112,97 @@ NVMCClient.prevCamera = function () {
 		this.currentCamera--;
 };
 
+NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
+	var stack=this.stack;
+	z=cannonPos[2];
+	x=cannonPos[0];
+
+
+	for(var i = 0; i<array.length; i++){
+		if(array[i].translateZ >= 25){
+			POINTS+=10;
+			//remove BALLSARRAY[0] since that's what it should be.
+			array.shift();
+			i--;
+		}
+		else{
+			
+			m = (z-z1)/(x-x1);
+			array[i].translateZ += .4;
+			newZ = z + array[i].translateZ;
+			newX = x1 + ((newZ - z1)/m);
+			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
+			array[i].translateX = newX - x;
+
+			//detect collisions
+			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
+			
+			if(distance <= 1) {
+				if((array[i].colorStr == "red") && (this.getButtonPress() != "N")){
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
+				}
+				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					console.log("Game Over! Points: " + POINTS);
+				}
+				else{
+					stack.push();
+					var M_9 = this.myFrame();
+					stack.multiply(M_9);
+					this.generateBall(gl, array[i].translateX, array[i].translateZ, array[i].color, cannonNum);
+					stack.pop();
+				}
+			}
+			else{
+				stack.push();
+				var M_9 = this.myFrame();
+				stack.multiply(M_9);
+				this.generateBall(gl, array[i].translateX, array[i].translateZ, array[i].color, cannonNum);
+				stack.pop();
+			}
+		}
+	}
+}
+
+NVMCClient.createBallObj = function (gl, array, cannonNum) {
+	var stack = this.stack;
+	stack.push();
+	var M_9 = this.myFrame();
+	stack.multiply(M_9);
+	var red=Math.floor((Math.random() * 2));
+	var green=Math.floor((Math.random() * 2));
+	var blue=Math.floor((Math.random() * 2));
+	var cString = "";
+	if(red == 1){
+		green=0;
+		blue=0;
+		cString = "red";
+	}
+	else{
+		blue=1;
+		green=1;
+		cString = "blue";
+	}
+	var ballObj = {
+		translateX: 0,
+		translateZ: 0,
+		color: [red, green, blue, 1.0],
+		colorStr: cString
+	};
+	array.push(ballObj)
+	this.generateBall(gl, 0, 0, ballObj.color, cannonNum); //cannonNum
+	stack.pop();
+}
+
 NVMCClient.drawScene = function (gl) {
+
+	GAMEOVER = this.getGameover();
+
 	var width = this.ui.width;
 	var height = this.ui.height
 	var ratio = width / height;
@@ -133,7 +223,7 @@ NVMCClient.drawScene = function (gl) {
 	gl.uniformMatrix4fv(this.uniformShader.uProjectionMatrixLocation, false, SglMat4.perspective(3.14 / 4, ratio, 1, 200));
 
 	var pos = this.myPos();
-	//console.log(pos);
+
 	this.cameras[this.currentCamera].setView(this.stack, this.myFrame());
 
 	var tra = SglMat4.translation([20, 0, 0]);
@@ -150,205 +240,18 @@ NVMCClient.drawScene = function (gl) {
 	stack.pop();
 	TIMER += 1;
 
-	//line stuff
-	cannonPos = [pos[0]-10, pos[1], pos[2]-20];
-	//line from pos to cannonPos? to generate an x, y.
-	
-	//increment z by 1 each time.
-	// z+=1;
-	// x = x1 + ((z-z1) / m);
-
-	z1=pos[2];
-	z=cannonPos[2];
-	x1=pos[0];
-	x=cannonPos[0];
-
-
-	for(var i = 0; i<BALLSARRAY1.length; i++){
-		if(BALLSARRAY1[i].translateZ >= 25){
-			POINTS+=10;
-			//remove BALLSARRAY[0] since that's what it should be.
-			BALLSARRAY1.shift();
-			i--;
-		}
-		else{
-			
-			m = (z-z1)/(x-x1);
-			BALLSARRAY1[i].translateZ += .4;
-			newZ = z + BALLSARRAY1[i].translateZ;
-			newX = x1 + ((newZ - z1)/m);
-			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
-			BALLSARRAY1[i].translateX = newX - x;
-
-			//detect collisions
-			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
-			
-			if(distance <= 1) {
-				if((BALLSARRAY1[i].colorStr == "red") && (this.getButtonPress() != "N")){
-					console.log("HIT RED! You didn't press 'N' at the right time.");
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
-				}
-				else if((BALLSARRAY1[i].colorStr == "blue") && (this.getButtonPress() != "M")){
-					console.log("HIT BLUE! You didn't press 'M' at the right time.");
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
-				}
-				else{
-					//console.log(BALLSARRAY[i].translateX)
-					//BALLSARRAY[i].translateX = 0;
-					stack.push();
-					var M_9 = this.myFrame();
-					stack.multiply(M_9);
-					this.generateBall(gl, BALLSARRAY1[i].translateX, BALLSARRAY1[i].translateZ, BALLSARRAY1[i].color, 0);
-					stack.pop();
-				}
-			}
-			else{
-				//console.log(BALLSARRAY[i].translateX)
-				//BALLSARRAY[i].translateX = 0;
-				stack.push();
-				var M_9 = this.myFrame();
-				stack.multiply(M_9);
-				this.generateBall(gl, BALLSARRAY1[i].translateX, BALLSARRAY1[i].translateZ, BALLSARRAY1[i].color, 0);
-				stack.pop();
-			}
-		}
-	}
-
-	cannonPos = [pos[0]+10, pos[1], pos[2]-20];
-	//line from pos to cannonPos? to generate an x, y.
-	
-	//increment z by 1 each time.
-	// z+=1;
-	// x = x1 + ((z-z1) / m);
-
-	z1=pos[2];
-	z=cannonPos[2];
-	x1=pos[0];
-	x=cannonPos[0];
-
-	for(var i = 0; i<BALLSARRAY2.length; i++){
-		if(BALLSARRAY2[i].translateZ >= 25){
-			POINTS+=10;
-			//remove BALLSARRAY[0] since that's what it should be.
-			BALLSARRAY2.shift();
-			i--;
-		}
-		else{
-			
-			m = (z-z1)/(x-x1);
-			BALLSARRAY2[i].translateZ += .4;
-			newZ = z + BALLSARRAY2[i].translateZ;
-			newX = x1 + ((newZ - z1)/m);
-			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
-			BALLSARRAY2[i].translateX = newX - x;
-
-			//detect collisions
-			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
-			
-			if(distance <= 1) {
-				if((BALLSARRAY2[i].colorStr == "red") && (this.getButtonPress() != "N")){
-					console.log("HIT RED! You didn't press 'N' at the right time.");
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
-				}
-				else if((BALLSARRAY2[i].colorStr == "blue") && (this.getButtonPress() != "M")){
-					console.log("HIT BLUE! You didn't press 'M' at the right time.");
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
-				}
-				else{
-					//console.log(BALLSARRAY[i].translateX)
-					//BALLSARRAY[i].translateX = 0;
-					stack.push();
-					var M_9 = this.myFrame();
-					stack.multiply(M_9);
-					this.generateBall(gl, BALLSARRAY2[i].translateX, BALLSARRAY2[i].translateZ, BALLSARRAY2[i].color, 1);
-					stack.pop();
-				}
-			}
-			else{
-				//console.log(BALLSARRAY[i].translateX)
-				//BALLSARRAY[i].translateX = 0;
-				stack.push();
-				var M_9 = this.myFrame();
-				stack.multiply(M_9);
-				this.generateBall(gl, BALLSARRAY2[i].translateX, BALLSARRAY2[i].translateZ, BALLSARRAY2[i].color, 1);
-				stack.pop();
-			}
-		}
-	}
+	//for each current cannon, translate, and make sure there are no collisions.
+	cannonPos1 = [pos[0]-10, pos[1], pos[2]-20];
+	cannonPos2 = [pos[0]+10, pos[1], pos[2]-20];
+	this.incrementCannon(gl, BALLSARRAY1, cannonPos1, pos[0], pos[2], 0);
+	this.incrementCannon(gl, BALLSARRAY2, cannonPos2, pos[0], pos[2], 1);
 
 	if(((TIMER % 100) == 0) && (GAMEOVER==false)){
-		//console.log("hi");
-		TIMER = 0;
-		stack.push();
-		var M_9 = this.myFrame();
-		stack.multiply(M_9);
-		var red=Math.floor((Math.random() * 2));
-		var green=Math.floor((Math.random() * 2));
-		var blue=Math.floor((Math.random() * 2));
-		var cString = "";
-		if(red == 1){
-			green=0;
-			blue=0;
-			cString = "red";
-		}
-		else{
-			blue=1;
-			green=1;
-			cString = "blue";
-		}
-		var ballObj = {
-			translateX: 0,
-			translateZ: 0,
-			color: [red, green, blue, 1.0],
-			colorStr: cString
-		};
-		BALLSARRAY1.push(ballObj)
-		this.generateBall(gl, 0, 0, ballObj.color, 0); //cannonNum
-		stack.pop();
-	
+		this.createBallObj(gl, BALLSARRAY1, 0);
 	}
 
 	if((((TIMER+50) % 100) == 0) && (GAMEOVER==false)){
-		//TIMER = 0;
-		stack.push();
-		var M_9 = this.myFrame();
-		stack.multiply(M_9);
-		var red=Math.floor((Math.random() * 2));
-		var green=Math.floor((Math.random() * 2));
-		var blue=Math.floor((Math.random() * 2));
-		var cString = "";
-		if(red == 1){
-			green=0;
-			blue=0;
-			cString = "red";
-		}
-		else{
-			blue=1;
-			green=1;
-			cString = "blue";
-		}
-		var ballObj = {
-			translateX: 0,
-			translateZ: 0,
-			color: [red, green, blue, 1.0],
-			colorStr: cString
-		};
-		BALLSARRAY2.push(ballObj)
-		this.generateBall(gl, 0, 0, ballObj.color, 1); //cannonNum
-		stack.pop();
-	
+		this.createBallObj(gl, BALLSARRAY2, 1);
 	}
 
 	stack.push();
@@ -377,6 +280,7 @@ NVMCClient.drawScene = function (gl) {
 	gl.useProgram(null);
 	gl.disable(gl.DEPTH_TEST);
 };
+
 /***********************************************************************/
 NVMCClient.initializeCameras = function () {
 	this.cameras[1].position = this.game.race.photoPosition;
@@ -423,6 +327,11 @@ NVMCClient.onKeyUp = function (keyCode, event) {
 
 	this.cameras[this.currentCamera].keyUp(keyCode);
 };
+
+NVMCClient.setGameover = function() {
+	GAMEOVER = true;
+};
+
 NVMCClient.onKeyDown = function (keyCode, event) {
 
 	if (this.carMotionKey[keyCode])
