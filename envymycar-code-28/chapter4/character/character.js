@@ -390,23 +390,22 @@ NVMCClient.drawTree = function (gl) {
 	stack.pop();
 };
 
-NVMCClient.drawCannon = function (gl) {
+NVMCClient.drawCannon = function (gl, cannon) {
 	var stack = this.stack;
-	var array = [[10, 1, -20], [-10, 1, -20]]
-	for(var i=0; i<2; i++){
-		stack.push();
-		var M_OverallTranslate = SglMat4.translation(array[i]);
-		stack.multiply(M_OverallTranslate);
-		var M_0_sca = SglMat4.scaling([1.5, 1.5, 1.5]);
-		stack.multiply(M_0_sca);
-		var M_0_tra1 = SglMat4.translation([0, -.70, 0]);
-		stack.multiply(M_0_tra1);
-		
-		gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
-		this.drawObject(gl, this.sphere, [0.0, 0.2, 0.2, 1.0], [0, 0, 0, 1.0]);
 
-		stack.pop();
-	}
+	stack.push();
+	var M_OverallTranslate = SglMat4.translation(cannon.translate);
+	stack.multiply(M_OverallTranslate);
+	var M_0_sca = SglMat4.scaling([1.5, 1.5, 1.5]);
+	stack.multiply(M_0_sca);
+	var M_0_tra1 = SglMat4.translation([0, -.70, 0]);
+	stack.multiply(M_0_tra1);
+	
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, cannon.color, [0, 0, 0, 1.0]);
+
+	stack.pop();
+	
 	
 };
 
@@ -433,9 +432,28 @@ NVMCClient.generateBall = function (gl, translateX, translateZ, c, cannonNum) {
 	
 };
 
+NVMCClient.prepareCannon = function (gl, cannon) {
+	if(cannon.count > 30){
+		cannon.count=0;
+		cannon.color = [.2, .2, .2, 1.0];
+	}
+	else if (cannon.count < 10){
+		cannon.color = [cannon.count/10, .2, .2, 1.0];
+		cannon.count++;
+	}
+	else if (cannon.count < 20){
+		cannon.count++;
+	}
+	else {
+		cannon.color = [.5, .2, .2, 1.0];
+		cannon.count++;
+	}
+	//cannon.color = [1.0, 0, 0, 1.0]
+};
+
 NVMCClient.getButtonPress = function () {
 	return BUTTONPRESS;
-}
+};
 
 NVMCClient.drawScene = function (gl) {
 	var pos = this.myPos();
@@ -523,7 +541,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 		//game.playerSteerRight = on;
 		//frontWheelRotate = -30;
 	};
-	carMotionKey["N"] = function (on) {
+	carMotionKey["R"] = function (on) {
 		if (KEYROTATE == -1){
 			KEYROTATE = 90;
 			ROTATEPOS = true;
@@ -533,7 +551,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 			//JUMPPARAMS[0] = true;
 		}
 	};
-	carMotionKey["M"] = function (on) {
+	carMotionKey["B"] = function (on) {
 		if (KEYROTATE == -1){
 			KEYROTATE = -90;
 			ROTATEPOS = false;

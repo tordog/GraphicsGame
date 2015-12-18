@@ -9,6 +9,22 @@ var BALLSARRAY1 = [];
 var BALLSARRAY2 = [];
 var GAMEOVER = true;
 var POINTS = 0;
+var CANNON1 = {
+	color: [.2, .2, .2, 1.0],
+	scale: 0,
+	position: [0,0,0],
+	count: 0,
+	translate: [0,0,0]
+};
+var CANNON2 = {
+	color: [.2, .2, .2, 1.0],
+	scale: 0,
+	position: [0,0,0],
+	count: 0,
+	translate: [0,0,0]
+};
+var MAXSPEED = 40;
+var INTEGRAL = 100;
 // var BUTTONPRESS = false;
 /***********************************************************************/
 
@@ -142,13 +158,13 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					BALLSARRAY1 = [];
 					BALLSARRAY2 = [];
 					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
+					NVMC.log("Game Over! Points: " + POINTS);
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
 					BALLSARRAY1 = [];
 					BALLSARRAY2 = [];
 					GAMEOVER=true;
-					console.log("Game Over! Points: " + POINTS);
+					NVMC.log("Game Over! Points: " + POINTS);
 				}
 				else{
 					stack.push();
@@ -241,23 +257,62 @@ NVMCClient.drawScene = function (gl) {
 	TIMER += 1;
 
 	//for each current cannon, translate, and make sure there are no collisions.
-	cannonPos1 = [pos[0]-10, pos[1], pos[2]-20];
-	cannonPos2 = [pos[0]+10, pos[1], pos[2]-20];
-	this.incrementCannon(gl, BALLSARRAY1, cannonPos1, pos[0], pos[2], 0);
-	this.incrementCannon(gl, BALLSARRAY2, cannonPos2, pos[0], pos[2], 1);
+	CANNON1.position = [pos[0]-10, pos[1], pos[2]-20];
+	CANNON1.translate = [-10, 1, -20];
+	CANNON2.position = [pos[0]+10, pos[1], pos[2]-20];
+	CANNON2.translate = [10, 1, -20];
+	this.incrementCannon(gl, BALLSARRAY1, CANNON1.position, pos[0], pos[2], 0);
+	this.incrementCannon(gl, BALLSARRAY2, CANNON2.position, pos[0], pos[2], 1);
 
-	if(((TIMER % 100) == 0) && (GAMEOVER==false)){
-		this.createBallObj(gl, BALLSARRAY1, 0);
-	}
+	if(GAMEOVER == false){	
 
-	if((((TIMER+50) % 100) == 0) && (GAMEOVER==false)){
-		this.createBallObj(gl, BALLSARRAY2, 1);
+		//generate a ball every 50-100 seconds
+		//var randIntegral = (Math.floor(Math.random()) * 100 + 70);
+		var randVar = Math.floor((Math.random() * 2));
+		var tempArray;
+		var tempCannon;
+		if(randVar==0){
+			tempArray=BALLSARRAY1;
+			tempCannon=CANNON1;
+		}
+		else{
+			tempArray=BALLSARRAY2;
+			tempCannon=CANNON2;
+		}
+		if((TIMER % INTEGRAL) == 0){
+			TIMER=0;
+			this.createBallObj(gl, tempArray, randVar);
+			if(INTEGRAL >= MAXSPEED)
+				if(INTEGRAL >= (MAXSPEED-10)){
+					INTEGRAL -= 1;
+				}
+				else{
+					INTEGRAL -= .1;
+				}
+		}
+		else if((TIMER % 100)==15){
+			tempCannon.count=1;
+		}
+		if(CANNON1.count != 0){
+			this.prepareCannon(gl, tempCannon);
+		}
+
+		// if(((TIMER+50) % 100) == 0){
+		// 	this.createBallObj(gl, BALLSARRAY2, 1);
+		// }
+		// else if(((TIMER+50) % 100)==10){
+		// 	CANNON2.count=1;
+		// }
+		// if(CANNON2.count != 0){
+		// 	this.prepareCannon(gl, CANNON2);
+		// }
 	}
 
 	stack.push();
 	var M_9 = this.myFrame();
 	stack.multiply(M_9);
-	this.drawCannon(gl);
+	this.drawCannon(gl, CANNON1);
+	this.drawCannon(gl, CANNON2);
 	stack.pop();
 
 	// var trees = this.game.race.trees;
@@ -326,10 +381,6 @@ NVMCClient.onKeyUp = function (keyCode, event) {
 		this.carMotionKey[keyCode](false);
 
 	this.cameras[this.currentCamera].keyUp(keyCode);
-};
-
-NVMCClient.setGameover = function() {
-	GAMEOVER = true;
 };
 
 NVMCClient.onKeyDown = function (keyCode, event) {
