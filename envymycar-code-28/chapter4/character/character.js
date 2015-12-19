@@ -17,6 +17,8 @@ var ROTANGLE = 3;
 var UNITR = 1;
 var GAMEOVER = true;
 var BODY_COLOR = [0.0, 0.7, 0.2, 1.0];
+var HEAD_TRANS = 0;
+var GAMESTART = false;
 /***********************************************************************/
 
 NVMCClient.myPos = function () {
@@ -246,7 +248,7 @@ NVMCClient.drawEye = function (gl) {
 	// stack.multiply(M_3_sca);
 
 	stack.pop();
-}
+};
 
 NVMCClient.drawStomach = function (gl) {
 	var stack = this.stack;
@@ -254,7 +256,7 @@ NVMCClient.drawStomach = function (gl) {
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, [0.8, 1.0, .4, 1.0], [0, 0, 0, 1.0]);
 	stack.pop();
-}
+};
 
 NVMCClient.drawTail = function (gl) {
 	var stack = this.stack;
@@ -262,7 +264,7 @@ NVMCClient.drawTail = function (gl) {
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.cone, BODY_COLOR, [0, 0, 0, 1.0]);
 	stack.pop();
-}
+};
 
 NVMCClient.drawBody = function (gl) {
 
@@ -413,6 +415,18 @@ NVMCClient.drawBody = function (gl) {
 	var M_5 = SglMat4.translation([3, 4.5, 0]);
 	stack.multiply(M_5);
 
+	if(this.getGameover() == true && GAMESTART == true && BUTTONPRESS == false){
+		if(HEAD_TRANS < 1){
+			HEAD_TRANS+=.01
+		}
+	}
+	else {
+		HEAD_TRANS=0;
+	}
+
+	var M_5 = SglMat4.translation([0, -1*HEAD_TRANS/3, 0]);
+	stack.multiply(M_5);
+
 	this.drawLeg(gl);
 	stack.pop();
 	// this.drawArm(gl)
@@ -423,6 +437,8 @@ NVMCClient.drawBody = function (gl) {
 	var M_3_sca = SglMat4.scaling([.2, .3+s_further, .2]);
 	stack.multiply(M_3_sca);
 	var M_5 = SglMat4.translation([-3, 4.5, 0]);
+	stack.multiply(M_5);
+	var M_5 = SglMat4.translation([0, -1*HEAD_TRANS/3, 0]);
 	stack.multiply(M_5);
 
 	this.drawLeg(gl);
@@ -440,6 +456,18 @@ NVMCClient.drawBody = function (gl) {
 		var M_5 = SglMat4.translation([0, -1, 0]);
 		stack.multiply(M_5);
 	}
+
+	// if(this.getGameover() == true && GAMESTART == true && BUTTONPRESS == false){
+	// 	if(HEAD_TRANS < 1){
+	// 		HEAD_TRANS+=.01
+	// 	}
+	// }
+	// else {
+	// 	HEAD_TRANS=0;
+	// }
+
+	var M_lol = SglMat4.translation([0, -1*HEAD_TRANS, -1*HEAD_TRANS]);
+	stack.multiply(M_lol);
 
 	this.drawHead(gl);
 	stack.pop();
@@ -648,6 +676,7 @@ NVMCClient.initMotionKeyHandlers = function () {
 		//game.playerBrake = on;
 		//frontWheelRotate = 0;
 		GAMEOVER=false;
+		GAMESTART=true;
 		BODY_COLOR = [0.0, 0.7, 0.2, 1.0];
 	};
 	carMotionKey["A"] = function (on) {

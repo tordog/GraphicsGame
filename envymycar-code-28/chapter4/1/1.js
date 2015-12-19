@@ -188,6 +188,7 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					GAMEOVER=true;
 					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
+					INTEGRAL = 100;
 					POINTS = 0;
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
@@ -196,6 +197,7 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					GAMEOVER=true;
 					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
+					INTEGRAL = 100;
 				      POINTS = 0;
 				}
 			      else if ((array[i].colorStr == "yellow") && (this.getButtonPress() != "I")){
@@ -205,6 +207,7 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
 				      POINTS = 0;
+				    INTEGRAL = 100;
 				}
 				else{
 					stack.push();
