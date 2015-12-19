@@ -157,7 +157,6 @@ NVMCClient.jump = function() {
 	else{
 		JUMPPARAMS[1] -= .1;
 	}
-	console.log(JUMPPARAMS[1]);
 	JUMPPARAMS[2]++;
 
 }
