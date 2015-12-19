@@ -144,14 +144,14 @@ NVMCClient.drawLeg = function(gl) {
 NVMCClient.jump = function() {
 	//translate up by 2
 	JUMPPARAMS[3] = 45;
-	if(JUMPPARAMS[2] == 40){
+	if(JUMPPARAMS[2] == 30){
 		JUMPPARAMS[0] = false;
 		JUMPPARAMS[1]=0;
 		JUMPPARAMS[2] = 0;
 		BUTTONPRESS = false;
 		JUMPPARAMS[3] = 0;
 	}
-	else if(JUMPPARAMS[2]<=20){
+	else if(JUMPPARAMS[2]<=15){
 		JUMPPARAMS[1] += .1;
 	}
 	else{
@@ -572,15 +572,15 @@ NVMCClient.generateBall = function (gl, translateX, translateZ, c, cannonNum) {
 };
 
 NVMCClient.prepareCannon = function (gl, cannon) {
-	if(cannon.count > 30){
+	if(cannon.count > 18){
 		cannon.count=0;
 		cannon.color = [.2, .2, .2, 1.0];
 	}
-	else if (cannon.count < 10){
+	else if (cannon.count < 8){
 		cannon.color = [cannon.count/10, .2, .2, 1.0];
 		cannon.count++;
 	}
-	else if (cannon.count < 20){
+	else if (cannon.count < 12){
 		cannon.count++;
 	}
 	else {

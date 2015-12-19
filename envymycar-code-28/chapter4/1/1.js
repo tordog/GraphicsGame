@@ -25,23 +25,33 @@ var CANNON2 = {
 };
 
 //randomly generate positions
-var tmp = Math.floor(Math.random() * 10) - 5;
+var tmp1 = Math.floor(Math.random() * 10) - 5;
 var tmp2 = Math.floor(Math.random() * 10) - 20;
 var tmp3 = Math.floor(Math.random() * 10) - 5;
 var tmp4 = Math.floor(Math.random() * 10) - 20;
+var tmp5 = Math.floor(Math.random() * 10) - 5;
+var tmp6 = Math.floor(Math.random() * 10) - 20;
 
 var OBSTACLES = {
 	obstacles: [
     	{
-      		position : [ tmp, 1, tmp2],
+      		position : [ tmp1, 1, tmp2],
       		height   : [.1, .2]
     	},
-	{
-      		position : [ tmp, 1, tmp2],
+		{
+      		position : [ tmp3, 1, tmp2],
       		height   : [.1, .1]
     	},
     	{
       		position : [ tmp3, 1, tmp4],
+      		height   : [.2, -.1]
+    	},
+    	{
+      		position : [ tmp5, 1, tmp4],
+      		height   : [-.2, .1]
+    	},
+    	{
+      		position : [ tmp5, 1, tmp6],
       		height   : [.2, .1]
     	}
   	]
@@ -348,19 +358,24 @@ NVMCClient.drawScene = function (gl) {
 		if((TIMER % INTEGRAL) == 0){
 			TIMER=0;
 			this.createBallObj(gl, tempArray, randVar);
-			if(INTEGRAL >= MAXSPEED)
+			if(INTEGRAL >= MAXSPEED){
 				if(INTEGRAL >= (MAXSPEED-10)){
 					INTEGRAL -= 1;
 				}
 				else{
 					INTEGRAL -= .1;
 				}
+			}
 		}
-		else if((TIMER % 100)==15){
-			tempCannon.count=1;
+		else if((TIMER % INTEGRAL)==15){
+			CANNON1.count=1;
+			CANNON2.count=1;
 		}
 		if(CANNON1.count != 0){
-			this.prepareCannon(gl, tempCannon);
+			this.prepareCannon(gl, CANNON1);
+		}
+		if(CANNON2.count != 0){
+			this.prepareCannon(gl, CANNON2);
 		}
 
 		// if(((TIMER+50) % 100) == 0){
