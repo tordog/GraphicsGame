@@ -23,6 +23,29 @@ var CANNON2 = {
 	count: 0,
 	translate: [0,0,0]
 };
+
+//randomly generate positions
+var tmp = Math.floor(Math.random() * 10) - 5;
+var tmp2 = Math.floor(Math.random() * 10) - 20;
+var tmp3 = Math.floor(Math.random() * 10) - 5;
+var tmp4 = Math.floor(Math.random() * 10) - 20;
+
+var OBSTACLES = {
+	obstacles: [
+    	{
+      		position : [ tmp, 1, tmp2],
+      		height   : [.1, .2]
+    	},
+	{
+      		position : [ tmp, 1, tmp2],
+      		height   : [.1, .1]
+    	},
+    	{
+      		position : [ tmp3, 1, tmp4],
+      		height   : [.2, .1]
+    	}
+  	]
+};
 var MAXSPEED = 40;
 var INTEGRAL = 100;
 // var BUTTONPRESS = false;
@@ -133,6 +156,8 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 	z=cannonPos[2];
 	x=cannonPos[0];
 
+	var pos = this.myPos();
+
 
 	for(var i = 0; i<array.length; i++){
 		if(array[i].translateZ >= 25){
@@ -144,13 +169,16 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 		else{
 			
 			m = (z-z1)/(x-x1);
-			array[i].translateZ += .4;
+			array[i].translateZ += .2;
 			newZ = z + array[i].translateZ;
 			newX = x1 + ((newZ - z1)/m);
 			//BALLSARRAY[i].translateX = x1 + ((BALLSARRAY[i].translateZ - z1)/m);
 			array[i].translateX = newX - x;
 
 			//detect collisions
+
+
+		      //detect collision with character
 			var distance = Math.sqrt(Math.pow((x1 - newX), 2) + Math.pow((z1-newZ), 2));
 			
 			if(distance <= 1) {
@@ -160,6 +188,7 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					GAMEOVER=true;
 					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
+					POINTS = 0;
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
 					BALLSARRAY1 = [];
@@ -167,6 +196,15 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 					GAMEOVER=true;
 					this.setBodyColor([.2, .2, .2, 1.0]);
 					NVMC.log("Game Over! Points: " + POINTS);
+				      POINTS = 0;
+				}
+			      else if ((array[i].colorStr == "yellow") && (this.getButtonPress() != "I")){
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
+					NVMC.log("Game Over! Points: " + POINTS);
+				      POINTS = 0;
 				}
 				else{
 					stack.push();
@@ -177,6 +215,24 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 				}
 			}
 			else{
+
+
+				//detect collision with obstacles
+				var obs = OBSTACLES.obstacles;
+				for (var j in obs) {
+					var temp1 = pos[0] + obs[j].position[0];
+					var temp2 = pos[2] + obs[j].position[2];
+				
+					var dist = Math.sqrt(Math.pow((temp1 - newX), 2) + Math.pow((temp2-newZ), 2));
+				
+					if(dist <= .3) {
+						//console.log("HIT!");
+						array[i].color = [.8, .6, .2, 1.0];
+						array[i].colorStr = "yellow";
+						obs[j].height[0] *= -1;
+						obs[j].height[1] *= -1;
+					}
+				}
 				stack.push();
 				var M_9 = this.myFrame();
 				stack.multiply(M_9);
@@ -256,6 +312,11 @@ NVMCClient.drawScene = function (gl) {
 	//this.drawCar(gl);
 	this.drawCharacter(gl);
 	stack.pop();
+
+	//stack.push();
+	//stack.multiply(M_9);
+	//this.drawRandomBalls(gl);
+	//stack.pop();
 	TIMER += 1;
 
 	//for each current cannon, translate, and make sure there are no collisions.
@@ -317,14 +378,30 @@ NVMCClient.drawScene = function (gl) {
 	this.drawCannon(gl, CANNON2);
 	stack.pop();
 
-	// var trees = this.game.race.trees;
-	// for (var t in trees) {
-	// 	stack.push();
-	// 	var M_8 = SglMat4.translation(trees[t].position);
-	// 	stack.multiply(M_8);
-	// 	this.drawTree(gl);
-	// 	stack.pop();
-	// }
+	if(GAMEOVER == false){
+
+	var obstacles = OBSTACLES.obstacles;
+	for (var o in obstacles){
+		stack.push();
+		var M_9 = this.myFrame();
+	        stack.multiply(M_9);
+		var M_o = SglMat4.translation(obstacles[o].position);
+		stack.multiply(M_o);
+		var M_0_sca = SglMat4.scaling([.5, .5, .5]);
+		stack.multiply(M_0_sca);
+
+		if((obstacles[o].position[0] > 10) || (obstacles[o].position[0] < -10)) {
+			obstacles[o].height[0] *= -1;
+		}
+		if((obstacles[o].position[2] < -25) || (obstacles[o].position[2] > -6)){
+			obstacles[o].height[1] *= -1;
+		}
+		obstacles[o].position[0] += obstacles[o].height[0];
+		obstacles[o].position[2] += obstacles[o].height[1];
+		this.drawObstacle(gl);
+		stack.pop();
+	}
+	}
 
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	//this.drawObject(gl, this.track, [0.9, 0.8, 0.7, 1.0], [0, 0, 0, 1.0]);
