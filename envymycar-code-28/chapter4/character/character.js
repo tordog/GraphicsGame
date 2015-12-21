@@ -12,7 +12,8 @@ var UNIT = 1;
 var SWITCHED = false;
 var CANNONTRANSLATE = 0;
 var BUTTONPRESS = false;
-var JUMPPARAMS = [false, 0, 0, 45]; //boolean, translateBy, counter, angle of rotation
+var JUMPPARAMS = [false, 0, 0, 45, 1.0]; //boolean, translateBy, counter, angle of rotation
+var DODGEPARAMS = [0, 1, 1]; //count, shadowscalex, shadowscalez
 var ROTANGLE = 3;
 var UNITR = 1;
 var GAMEOVER = true;
@@ -150,6 +151,7 @@ NVMCClient.jump = function() {
 		JUMPPARAMS[2] = 0;
 		BUTTONPRESS = false;
 		JUMPPARAMS[3] = 0;
+		JUMPPARAMS[4] = 1.0;
 	}
 	else if(JUMPPARAMS[2]<=15){
 		JUMPPARAMS[1] += .1;
@@ -288,6 +290,32 @@ NVMCClient.drawBody = function (gl) {
 	//TORDOG
 
 	var stack = this.stack;
+
+
+	//bodyshadow
+	stack.push();
+	var M_3_sca = SglMat4.scaling([.8, .01, .8]);
+	stack.multiply(M_3_sca);
+	var M_kp = SglMat4.translation([0, 2, 0]);
+	stack.multiply(M_kp);
+
+	if(BUTTONPRESS=="I"){
+		if(JUMPPARAMS[2] <= 15){
+			JUMPPARAMS[4]-=.015;
+		}
+		else{
+			JUMPPARAMS[4]+=.015;
+		}
+		var Mscale = SglMat4.scaling([JUMPPARAMS[4], JUMPPARAMS[4], JUMPPARAMS[4]]);
+		stack.multiply(Mscale);
+	}
+
+	if(BUTTONPRESS == "N" || BUTTONPRESS == "M"){
+
+	}
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [.0, .0, .0, 1.0], [0, 0, 0, 1.0]);
+	stack.pop();
 	stack.push();
 
 	if(BUTTONPRESS == "I"){
@@ -512,10 +540,22 @@ NVMCClient.drawGroup = function (gl) {
 NVMCClient.drawObstacle = function (gl) {
 	var stack = this.stack;
 	stack.push();
+
 	var M_0_sca = SglMat4.scaling([.5, .5, .5]);
 	stack.multiply(M_0_sca);
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.cube, [0.8, 0.6, 0.2, 1.0], [0, 0, 0, 1.0]);
+	stack.pop();
+
+	stack.push();
+	var M_kp = SglMat4.translation([0, -1, 0]);
+	stack.multiply(M_kp);
+	var M_3_sca = SglMat4.scaling([.45, .01, .45]);
+	stack.multiply(M_3_sca);
+	// var M_kp = SglMat4.translation([0, -1, 0]);
+	// stack.multiply(M_kp);
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.cube, [.0, .0, .0, 1.0], [0, 0, 0, 1.0]);
 	stack.pop();
 };
 
@@ -558,6 +598,15 @@ NVMCClient.drawCannon = function (gl, cannon) {
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, cannon.color, [0, 0, 0, 1.0]);
 
+	// var M_kp = SglMat4.translation([0, -1, 0]);
+	// stack.multiply(M_kp);
+	var M_3_sca = SglMat4.scaling([.7, .01, .7]);
+	stack.multiply(M_3_sca);
+	// var M_kp = SglMat4.translation([0, -1, 0]);
+	// stack.multiply(M_kp);
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [.0, .0, .0, 1.0], [0, 0, 0, 1.0]);
+
 	stack.pop();
 	
 	
@@ -571,7 +620,7 @@ NVMCClient.generateBall = function (gl, translateX, translateZ, c, cannonNum) {
 	stack.push();
 	var M_OverallTranslate = SglMat4.translation(array[cannonNum]);
 	stack.multiply(M_OverallTranslate);
-	M_translate = SglMat4.translation([translateX, 0, translateZ]);
+	M_translate = SglMat4.translation([translateX, .1, translateZ]);
 	stack.multiply(M_translate);
 	var M_3_sca = SglMat4.scaling([.5, .5, .5]);
 	stack.multiply(M_3_sca);
@@ -580,6 +629,17 @@ NVMCClient.generateBall = function (gl, translateX, translateZ, c, cannonNum) {
 	
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, c, [0, 0, 0, 1.0]);
+
+	stack.push();
+	var M_kp = SglMat4.translation([0, -.2, 0]);
+	stack.multiply(M_kp);
+	var M_3_sca = SglMat4.scaling([.8, .01, .8]);
+	stack.multiply(M_3_sca);
+	// var M_kp = SglMat4.translation([0, -1, 0]);
+	// stack.multiply(M_kp);
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.sphere, [.0, .0, .0, 1.0], [0, 0, 0, 1.0]);
+	stack.pop();
 
 	stack.pop();
 	
