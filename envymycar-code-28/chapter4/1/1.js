@@ -153,12 +153,12 @@ NVMCClient.n_cameras = 2;
 NVMCClient.currentCamera = 0;
 
 NVMCClient.nextCamera = function () {
-	if (this.n_cameras - 1 > this.currentCamera)
-		this.currentCamera++;
+	//if (this.n_cameras - 1 > this.currentCamera)
+	//	this.currentCamera++;
 };
 NVMCClient.prevCamera = function () {
-	if (0 < this.currentCamera)
-		this.currentCamera--;
+	//if (0 < this.currentCamera)
+	//	this.currentCamera--;
 };
 
 NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
@@ -168,7 +168,7 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 
 	var pos = this.myPos();
 
-
+	//for each cannonball
 	for(var i = 0; i<array.length; i++){
 		if(array[i].translateZ >= 25){
 			POINTS+=10;
@@ -193,31 +193,31 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 			
 			if(distance <= 1) {
 				if((array[i].colorStr == "red") && (this.getButtonPress() != "N")){
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					this.setBodyColor([.2, .2, .2, 1.0]);
-					NVMC.log("Game Over! Points: " + POINTS);
-					INTEGRAL = 100;
-					POINTS = 0;
+					// BALLSARRAY1 = [];
+					// BALLSARRAY2 = [];
+					// GAMEOVER=true;
+					// this.setBodyColor([.2, .2, .2, 1.0]);
+					// NVMC.log("Game Over! Points: " + POINTS);
+					// INTEGRAL = 100;
+					// POINTS = 0;
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					this.setBodyColor([.2, .2, .2, 1.0]);
-					NVMC.log("Game Over! Points: " + POINTS);
-					INTEGRAL = 100;
-				      POINTS = 0;
+					// BALLSARRAY1 = [];
+					// BALLSARRAY2 = [];
+					// GAMEOVER=true;
+					// this.setBodyColor([.2, .2, .2, 1.0]);
+					// NVMC.log("Game Over! Points: " + POINTS);
+					// INTEGRAL = 100;
+				 //      POINTS = 0;
 				}
 			      else if ((array[i].colorStr == "yellow") && (this.getButtonPress() != "I")){
-					BALLSARRAY1 = [];
-					BALLSARRAY2 = [];
-					GAMEOVER=true;
-					this.setBodyColor([.2, .2, .2, 1.0]);
-					NVMC.log("Game Over! Points: " + POINTS);
-				      POINTS = 0;
-				    INTEGRAL = 100;
+					// BALLSARRAY1 = [];
+					// BALLSARRAY2 = [];
+					// GAMEOVER=true;
+					// this.setBodyColor([.2, .2, .2, 1.0]);
+					// NVMC.log("Game Over! Points: " + POINTS);
+				 //      POINTS = 0;
+				 //    INTEGRAL = 100;
 				}
 				else{
 					stack.push();
@@ -233,12 +233,13 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 				//detect collision with obstacles
 				var obs = OBSTACLES.obstacles;
 				for (var j in obs) {
+
 					var temp1 = pos[0] + obs[j].position[0];
 					var temp2 = pos[2] + obs[j].position[2];
 				
 					var dist = Math.sqrt(Math.pow((temp1 - newX), 2) + Math.pow((temp2-newZ), 2));
 				
-					if(dist <= .3) {
+					if(dist <= .5) {
 						//console.log("HIT!");
 						array[i].color = [.8, .6, .2, 1.0];
 						array[i].colorStr = "yellow";
@@ -398,27 +399,39 @@ NVMCClient.drawScene = function (gl) {
 
 	if(GAMEOVER == false){
 
-	var obstacles = OBSTACLES.obstacles;
-	for (var o in obstacles){
-		stack.push();
-		var M_9 = this.myFrame();
-	        stack.multiply(M_9);
-		var M_o = SglMat4.translation(obstacles[o].position);
-		stack.multiply(M_o);
-		var M_0_sca = SglMat4.scaling([.5, .5, .5]);
-		stack.multiply(M_0_sca);
+		var obstacles = OBSTACLES.obstacles;
+		for (var o in obstacles){
+			stack.push();
+			var M_9 = this.myFrame();
+		    stack.multiply(M_9);
+			var M_o = SglMat4.translation(obstacles[o].position);
+			stack.multiply(M_o);
+			var M_0_sca = SglMat4.scaling([.5, .5, .5]);
+			stack.multiply(M_0_sca);
 
-		if((obstacles[o].position[0] > 10) || (obstacles[o].position[0] < -10)) {
-			obstacles[o].height[0] *= -1;
+			if((obstacles[o].position[0] > 10) || (obstacles[o].position[0] < -10)) {
+				obstacles[o].height[0] *= -1;
+			}
+			if((obstacles[o].position[2] < -25) || (obstacles[o].position[2] > -6)){
+				obstacles[o].height[1] *= -1;
+			}
+			obstacles[o].position[0] += obstacles[o].height[0];
+			obstacles[o].position[2] += obstacles[o].height[1];
+			this.drawObstacle(gl);
+			stack.pop();
+
+			//detect collision of obstacles with cannon
+			var temp1 = obstacles[o].position[0];
+			var temp2 = obstacles[o].position[2];
+			var d1 = Math.sqrt(Math.pow(temp1 - CANNON1.translate[0], 2) + Math.pow(temp2 - CANNON1.translate[2], 2));
+			var d2 = Math.sqrt(Math.pow(temp1 - CANNON2.translate[0], 2) + Math.pow(temp2 - CANNON2.translate[2], 2));
+			if(d1 < 2 || d2 < 2){
+				console.log("TRRDDD");
+				obstacles[o].height[0] *= -1;
+				obstacles[o].height[1] *= -1;
+			}
+
 		}
-		if((obstacles[o].position[2] < -25) || (obstacles[o].position[2] > -6)){
-			obstacles[o].height[1] *= -1;
-		}
-		obstacles[o].position[0] += obstacles[o].height[0];
-		obstacles[o].position[2] += obstacles[o].height[1];
-		this.drawObstacle(gl);
-		stack.pop();
-	}
 	}
 
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
