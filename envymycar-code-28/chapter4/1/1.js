@@ -193,31 +193,31 @@ NVMCClient.incrementCannon = function(gl, array, cannonPos, x1, z1, cannonNum){
 			
 			if(distance <= 1) {
 				if((array[i].colorStr == "red") && (this.getButtonPress() != "N")){
-					// BALLSARRAY1 = [];
-					// BALLSARRAY2 = [];
-					// GAMEOVER=true;
-					// this.setBodyColor([.2, .2, .2, 1.0]);
-					// NVMC.log("Game Over! Points: " + POINTS);
-					// INTEGRAL = 100;
-					// POINTS = 0;
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
+					NVMC.log("Game Over! Points: " + POINTS);
+					INTEGRAL = 100;
+					POINTS = 0;
 				}
 				else if((array[i].colorStr == "blue") && (this.getButtonPress() != "M")){
-					// BALLSARRAY1 = [];
-					// BALLSARRAY2 = [];
-					// GAMEOVER=true;
-					// this.setBodyColor([.2, .2, .2, 1.0]);
-					// NVMC.log("Game Over! Points: " + POINTS);
-					// INTEGRAL = 100;
-				 //      POINTS = 0;
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
+					NVMC.log("Game Over! Points: " + POINTS);
+					INTEGRAL = 100;
+				   	POINTS = 0;
 				}
 			      else if ((array[i].colorStr == "yellow") && (this.getButtonPress() != "I")){
-					// BALLSARRAY1 = [];
-					// BALLSARRAY2 = [];
-					// GAMEOVER=true;
-					// this.setBodyColor([.2, .2, .2, 1.0]);
-					// NVMC.log("Game Over! Points: " + POINTS);
-				 //      POINTS = 0;
-				 //    INTEGRAL = 100;
+					BALLSARRAY1 = [];
+					BALLSARRAY2 = [];
+					GAMEOVER=true;
+					this.setBodyColor([.2, .2, .2, 1.0]);
+					NVMC.log("Game Over! Points: " + POINTS);
+				    POINTS = 0;
+				    INTEGRAL = 100;
 				}
 				else{
 					stack.push();
@@ -426,12 +426,27 @@ NVMCClient.drawScene = function (gl) {
 			var d1 = Math.sqrt(Math.pow(temp1 - CANNON1.translate[0], 2) + Math.pow(temp2 - CANNON1.translate[2], 2));
 			var d2 = Math.sqrt(Math.pow(temp1 - CANNON2.translate[0], 2) + Math.pow(temp2 - CANNON2.translate[2], 2));
 			if(d1 < 2 || d2 < 2){
-				console.log("TRRDDD");
 				obstacles[o].height[0] *= -1;
 				obstacles[o].height[1] *= -1;
 			}
 
 		}
+
+		for (var a=0; a<obstacles.length-1; a++){
+			for (var b=a+1; b<obstacles.length; b++) {
+				//are we close? then reverse 
+				var t1 = obstacles[a].position;
+				var t2 = obstacles[b].position;
+				var distTemp = Math.sqrt(Math.pow(t1[0] - t2[0], 2) + Math.pow(t1[2] - t2[2], 2));
+				if(distTemp < .5){
+					obstacles[a].height[0] *= -1;
+					obstacles[a].height[2] *= -1;
+					obstacles[b].height[0] *= -1;
+					obstacles[b].height[2] *= -1;
+				}
+			}
+		}
+
 	}
 
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
