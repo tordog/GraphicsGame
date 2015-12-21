@@ -13,7 +13,7 @@ var SWITCHED = false;
 var CANNONTRANSLATE = 0;
 var BUTTONPRESS = false;
 var JUMPPARAMS = [false, 0, 0, 45, 1.0]; //boolean, translateBy, counter, angle of rotation
-var DODGEPARAMS = [0, 1, 1]; //count, shadowscalex, shadowscalez
+var DODGEPARAMS = [0, 1, 1, 0]; //count, shadowscalex, shadowscalez
 var ROTANGLE = 3;
 var UNITR = 1;
 var GAMEOVER = true;
@@ -311,7 +311,44 @@ NVMCClient.drawBody = function (gl) {
 	}
 
 	if(BUTTONPRESS == "N" || BUTTONPRESS == "M"){
-
+		DODGEPARAMS[0]+=1;
+		if(DODGEPARAMS[0]==36){
+			DODGEPARAMS[0]=0;
+			DODGEPARAMS[1]=1;
+			DODGEPARAMS[2]=1;
+			DODGEPARAMS[3]=0;
+		}
+		else if(DODGEPARAMS[0] <= 18){
+			DODGEPARAMS[1] -= .03;
+			DODGEPARAMS[2] -= .02;
+			if(BUTTONPRESS == "N"){
+				DODGEPARAMS[3] -= .05;
+			}
+			else{
+				DODGEPARAMS[3] += .05;
+			}
+		}
+		else{
+			DODGEPARAMS[1] += .03;
+			DODGEPARAMS[2] += .02;
+			if(BUTTONPRESS == "N"){
+				DODGEPARAMS[3] += .05;
+			}
+			else{
+				DODGEPARAMS[3] -= .05;
+			}
+		}
+		var Mtrans = SglMat4.translation([DODGEPARAMS[3], 0, 0]);
+		stack.multiply(Mtrans);
+		var Mscale = SglMat4.scaling([DODGEPARAMS[1], 1, DODGEPARAMS[2]]);
+		stack.multiply(Mscale);
+		
+	}
+	else{
+		DODGEPARAMS[0]=0;
+		DODGEPARAMS[1]=1;
+		DODGEPARAMS[2]=1;
+		DODGEPARAMS[3]=0;
 	}
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.sphere, [.0, .0, .0, 1.0], [0, 0, 0, 1.0]);
