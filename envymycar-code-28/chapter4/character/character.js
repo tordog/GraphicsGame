@@ -261,7 +261,23 @@ NVMCClient.drawTail = function (gl) {
 	var stack = this.stack;
 	stack.push();
 	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
+	this.drawObject(gl, this.cylinder, BODY_COLOR, [0, 0, 0, 1.0]);
+	stack.push();
+
+	
+	var M_3_sca = SglMat4.scaling([1, 1.5, 1]);
+	stack.multiply(M_3_sca);
+	var M_5 = SglMat4.translation([0, 1.6, 0]);
+	stack.multiply(M_5);
+
+	//TODO: rotate if angle is something.
+	var M_zrot = SglMat4.rotationAngleAxis(sglDegToRad(ROTANGLE), [0, 0, 1]);
+	stack.multiply(M_zrot);
+
+
+	gl.uniformMatrix4fv(this.uniformShader.uModelViewMatrixLocation, false, stack.matrix);
 	this.drawObject(gl, this.cone, BODY_COLOR, [0, 0, 0, 1.0]);
+	stack.pop();
 	stack.pop();
 };
 
@@ -315,7 +331,7 @@ NVMCClient.drawBody = function (gl) {
 	stack.push();
 	var M_5 = SglMat4.translation([0, .6, 1]);
 	stack.multiply(M_5);
-	var M_3_sca = SglMat4.scaling([.2, .2, .4]);
+	var M_3_sca = SglMat4.scaling([.12, .12, .12]);
 	stack.multiply(M_3_sca);
 	var M_yrot = SglMat4.rotationAngleAxis(sglDegToRad(80), [1, 0, 0]);
 	stack.multiply(M_yrot);
